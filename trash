@@ -1,0 +1,10 @@
+
+
+def pipline(data, model, trainer):
+    return trainer.fit(model, data)
+
+with dpg.window(tag="Primary Window"):
+    data = d2l.SyntheticRegressionData(w=torch.tensor([2, -3.4]), b=4.2)
+    model = d2l.LinearRegression(lr=0.03)
+    trainer = d2l.Trainer(max_epochs=3)
+    trainer.fit(model, data)
