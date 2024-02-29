@@ -8,3 +8,42 @@ with dpg.window(tag="Primary Window"):
     model = d2l.LinearRegression(lr=0.03)
     trainer = d2l.Trainer(max_epochs=3)
     trainer.fit(model, data)
+
+
+
+
+
+
+
+
+    # Добавить кнопку, которая будет загружать данные для обучения
+        # Добавить check'ер, который позволит загрузить 2 файла: для обучения и валидационную
+        # Добавить выбор -> генерация синтетических данных для проверки модели
+    dpg.add_radio_button(tag='train_data',
+                         items=["File"],
+                         callback=GUI.switch_kind,
+                         horizontal=True,
+                         )
+    dpg.add_collapsing_header(tag='kind_data', show=False, default_open=True)
+        
+        
+    # pipline = Pipline()
+    # dpg.add_button(label='Подтвердить', tag='data', callback=get_data, 
+    #             #    user_data=pipline
+    #                )
+    
+    # # Добавить область, в котором будут выбираться методы
+    # dpg.add_text("Выберите метод:")
+    # with dpg.clipper():
+    #     methods = env.str('METHODS').split(' ')
+    #     dpg.add_combo(items=methods, tag='method', default_value=methods[0])
+    
+    # Добавить область, в которой будут выбираться гиперпараметры
+        
+    # Добавить график, на котором будет отображаться процесс обучения
+        
+    # Добавить кнопку, которая позволит загрузить тестовые данные
+        
+    # Добавит кнопку, которая позволит скачать веса модели
+
+

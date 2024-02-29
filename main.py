@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 import torch
 from d2l import torch as d2l
 from torch import nn
+import matplotlib.pyplot as plt
 
 ########################################################################################################################
 # Setup
@@ -124,6 +125,9 @@ class Node:
     def add_params(self, params: list[ParamNode]):
         if params:
             self._params += params
+
+    def custom(self):
+        pass
         
     def execute(self):
         for attribute in self._output_attributes:
@@ -140,6 +144,10 @@ class Node:
 
             for attribute in self._params:
                 attribute.submit(self.uuid)
+            
+            with dpg.node_attribute(parent=self.uuid, attribute_type=dpg.mvNode_Attr_Static,
+                                    user_data=self, tag=self.static_uuid):
+                self.custom()
 
             for attribute in self._output_attributes:
                 attribute.submit(self.uuid)
@@ -184,7 +192,7 @@ class NodeEditor:
 ########################################################################################################################
 class DragSource:
 
-    def __init__(self, label: str, node_generator, data, params: list[ParamNode]=None):
+    def __init__(self, label: str, node_generator, data=None, params: list[ParamNode]=None):
 
         self.label = label
         self._generator = node_generator
@@ -200,6 +208,7 @@ class DragSource:
             dpg.add_text(f"Name: {self.label}")
 
 
+
 class DragSourceContainer:
 
     def __init__(self, label: str, width: int = 150, height: int = -1):
@@ -211,6 +220,45 @@ class DragSourceContainer:
         self._children: list[DragSource] = []  # drag sources
 
     def add_drag_source(self, source: DragSource):
+        self._children.append(source)
+
+    def submit(self, parent):
+
+        with dpg.child_window(parent=parent, width=self._width, height=self._height, tag=self._uuid, menubar=True) as child_parent:
+            with dpg.menu_bar():
+                dpg.add_menu(label=self._label, enabled=False)
+
+            for child in self._children:
+                child.submit(child_parent)
+
+class ParamSource:
+
+    def __init__(self, label: str, choices:dict, **params):
+
+        self.uuid = dpg.generate_uuid()
+        self.label = label
+        self.choices = choices
+        self.params=params
+
+    def submit(self, parent):
+        dpg.add_combo(**self.params, label=self.label, parent=parent, 
+                      items=list(self.choices.keys()), 
+                      tag=self.uuid)
+        dpg.bind_item_theme(dpg.last_item(), _source_theme)
+
+
+
+class ParamContainer:
+
+    def __init__(self, label: str, width: int = 150, height: int = -1):
+
+        self._label = label
+        self._width = width
+        self._height = height
+        self._uuid = dpg.generate_uuid()
+        self._children: list[ParamSource] = []  # params
+
+    def add_param(self, source: ParamSource):
         self._children.append(source)
 
     def submit(self, parent):
@@ -242,6 +290,7 @@ class UtilityNode(Node):
 
 
 
+
 ########################################################################################################################
 # Layers
 ########################################################################################################################
@@ -264,144 +313,43 @@ class LayerNode(Node):
 ########################################################################################################################
 # Tools
 ########################################################################################################################
-class ViewNode_1D(Node):
-
-    @staticmethod
-    def factory(name, data):
-        node = ViewNode_1D(name, data)
-        return node
-
-    def __init__(self, label: str, data):
-        super().__init__(label, data)
-
-        self.add_input_attribute(InputNodeAttribute())
-        self.simple_plot = dpg.generate_uuid()
-
-    def custom(self):
-
-        dpg.add_simple_plot(label="Data View", width=200, height=80, tag=self.simple_plot)
-
-    def execute(self):
-
-        plot_id = self._static_attributes[0].simple_plot
-        dpg.set_value(plot_id, self._input_attributes[0].get_data())
-        self.finish()
-
-
 class ViewNode_2D(Node):
 
     @staticmethod
-    def factory(name, data):
-        node = ViewNode_2D(name, data)
+    def factory(name, data=None, params=None):
+        node = ViewNode_2D(name, data, params)
         return node
 
-    def __init__(self, label: str, data):
+    def __init__(self, label: str, data=None, params=None):
         super().__init__(label, data)
 
-        self.add_input_attribute(InputNodeAttribute("x"))
-        self.add_input_attribute(InputNodeAttribute("y"))
+        self.add_input_attribute(InputNodeAttribute("full dataset", self))
+        self.add_params(params)
 
         self.x_axis = dpg.generate_uuid()
         self.y_axis = dpg.generate_uuid()
+        
 
     def custom(self):
 
         with dpg.plot(height=400, width=400, no_title=True):
-            dpg.add_plot_axis(dpg.mvXAxis, label="", tag=self.x_axis)
-            dpg.add_plot_axis(dpg.mvYAxis, label="", tag=self.y_axis)
+            dpg.add_plot_axis(dpg.mvXAxis, label="epoch", tag=self.x_axis)
+            # dpg.set_axis_limits(dpg.last_item(), 0, 10)
+            dpg.add_plot_axis(dpg.mvYAxis, label="estimates", tag=self.y_axis)
+            dpg.set_axis_limits(dpg.last_item(), -0.1, 1)
+            dpg.add_plot_legend()
 
-    def execute(self):
+
+    def execute(self, plt_lines=None, labels=None):
 
         x_axis_id = self.x_axis
         y_axis_id = self.y_axis
-
-        x_orig_data = self._input_attributes[0].get_data()
-        y_orig_data = self._input_attributes[1].get_data()
-
-        dpg.add_line_series(x_orig_data, y_orig_data, parent=y_axis_id)
+        dpg.delete_item(y_axis_id, children_only=True)
+        for idx, line in enumerate(plt_lines):
+            x_orig_data, y_orig_data = line.get_xdata(), line.get_ydata()
+            dpg.add_line_series(x_orig_data, y_orig_data, parent=y_axis_id, label=labels[idx])
         dpg.fit_axis_data(x_axis_id)
         dpg.fit_axis_data(y_axis_id)
-
-        self.finish()
-
-
-class CheckerNode(Node):
-
-    @staticmethod
-    def factory(name, data):
-        node = CheckerNode(name, data)
-        return node
-
-    def __init__(self, label: str, data):
-        super().__init__(label, data)
-
-        self.add_input_attribute(InputNodeAttribute("Value"))
-
-        self.expected_id = dpg.generate_uuid()
-        self.min_id = dpg.generate_uuid()
-        self.max_id = dpg.generate_uuid()
-        self.status_id = dpg.generate_uuid()
-
-        with dpg.theme() as self.success:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [0, 255, 0], category=dpg.mvThemeCat_Core, tag=self.success)
-
-        with dpg.theme() as self.fail:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [255, 0, 0], category=dpg.mvThemeCat_Core, tag=self.fail)
-
-        with dpg.theme() as self.neutral:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [255, 255, 0], category=dpg.mvThemeCat_Core, tag=self.neutral)
-
-    def custom(self):
-
-        with dpg.group(width=150):
-            dpg.add_input_float(label="Expected Value", step=0.0, tag=self.expected_id, default_value=10)
-            dpg.add_input_float(label="Max Tolerance", step=0.0, tag=self.max_id, default_value=.05)
-            dpg.add_input_float(label="Min Tolerance", step=0.0, tag=self.min_id, default_value=.05)
-            dpg.add_radio_button(items=["Status"], tag=self.status_id)
-            dpg.set_item_theme(self.status_id, self.neutral)
-
-    def execute(self):
-
-        # get input attribute data
-        value = round(self._input_attributes[0].get_data(), 5)
-
-        min_value = dpg.get_value(self.min_id)
-        max_value = dpg.get_value(self.max_id)
-        expect_value = dpg.get_value(self.expected_id)
-
-        if round(expect_value - min_value,5) <= value <= round(expect_value + max_value, 5):
-            dpg.set_item_theme(self._static_attributes[0].status_id, self.success)
-        else:
-            dpg.set_item_theme(self._static_attributes[0].status_id, self.fail)
-
-        self.finish()
-
-
-class ValueNode(Node):
-
-    @staticmethod
-    def factory(name, data):
-        node = ValueNode(name, data)
-        return node
-
-    def __init__(self, label: str, data):
-        super().__init__(label, data)
-
-        self.add_output_attribute(OutputNodeAttribute("Value"))
-
-        self.value = dpg.generate_uuid()
-
-    def custom(self):
-
-        with dpg.group(width=150):
-            dpg.add_input_float(label="Input Value", step=0, tag=self.value, default_value=10)
-
-    def execute(self):
-
-        # get input attribute data
-        value = dpg.get_value(self.value)
-        self._output_attributes[0].execute(value)
-
         self.finish()
 
 
@@ -415,20 +363,33 @@ class DataNode(Node):
     def __init__(self, label: str, data, params=None):
         super().__init__(label, data)
         self.add_output_attribute(OutputNodeAttribute("data"))
-        self.data = dpg.generate_uuid()
+        self.add_output_attribute(OutputNodeAttribute("train graph"))
+        self.add_params(params)
+        self.uuid = dpg.generate_uuid()
 
 
-class CustomSequential(nn.Module):
-    def __init__(self, *args):
-        super().__init__()
-        print(*args)
-        for idx, module in enumerate(args):
-            self.add_module(str(idx), module)
+class RegressNet(d2l.Module):
+    def __init__(self, lr, sequential: list, Loss, widget=None):
+        super().__init__(widget=widget)
+        self.save_hyperparameters()
+        self.net = nn.Sequential(*sequential)
+        self.loss_func=Loss
 
-    def forward(self, X):
-        for module in self.children():
-            X = module(X)
-        return X
+    def loss(self, y_hat, y):
+        fn= self.loss_func()
+        return fn(y_hat, y)
+    
+    
+class ClassifierNet(d2l.Classifier):
+    def __init__(self, lr, sequential: list, Loss, widget=None):
+        super().__init__(widget=widget)
+        self.save_hyperparameters()
+        self.net = nn.Sequential(*sequential)
+        self.loss_func=Loss
+
+    def loss(self, y_hat, y):
+        fn= self.loss_func()
+        return fn(y_hat, y)
     
 ########################################################################################################################
 # Application
@@ -438,9 +399,10 @@ class App:
     def __init__(self):
 
         self.dataset_container = DragSourceContainer("Datasets", 150, -500)
-        self.tool_container = DragSourceContainer("Tools", 150, -30)
-        self.utility_container = DragSourceContainer("Utilities", 150, -500)
         self.layer_container = DragSourceContainer("Layers", 150, -1)
+        self.utility_container = DragSourceContainer("Utilities", 150, -500)
+        self.tool_container = DragSourceContainer("Tools", 150, -150)
+        self.param_container = ParamContainer("Parameters", 150, -30)
         self.plugin_menu_id = dpg.generate_uuid()
         self.left_panel = dpg.generate_uuid()
         self.node_editor = NodeEditor()
@@ -450,6 +412,10 @@ class App:
         self.dataset_container.add_drag_source(DragSource("Synthetic Regression Data", 
                                                           DataNode.factory, 
                                                           d2l.SyntheticRegressionData(w=torch.tensor([2, -3.4]), b=4.2)))
+        self.dataset_container.add_drag_source(DragSource("FashionMNIST", 
+                                                          DataNode.factory, 
+                                                          d2l.FashionMNIST,
+                                                          [ParamNode("batch_size", 'int', step=2, width=150, min_value=2, min_clamped=True, default_value=64)]))
         
         self.utility_container.add_drag_source(DragSource("Flatten",
                                                           UtilityNode.factory,
@@ -458,7 +424,18 @@ class App:
         self.layer_container.add_drag_source(DragSource("Linear Layer", 
                                                         LayerNode.factory, 
                                                         nn.LazyLinear,
-                                                        [ParamNode("out_features", 'float', step=0, width=150)]))
+                                                        [ParamNode("out_features", 'int', step=1, width=150, min_value=1, min_clamped=True, default_value=1)]))
+        
+        self.tool_container.add_drag_source(DragSource("Progress Board", 
+                                                        ViewNode_2D.factory))
+        
+        self.param_container.add_param(ParamSource("Loss",
+                                                   {'MSE': nn.MSELoss, 'Cross Entropy Loss':nn.CrossEntropyLoss},
+                                                   default_value='MSE'))
+        self.param_container.add_param(ParamSource("Task",
+                                                   {'Regression': RegressNet, 'Classifier': ClassifierNet},
+                                                   default_value='Regression'))
+        
 
     def update(self):
 
@@ -475,32 +452,50 @@ class App:
     def add_plugin(self, name, callback):
         self.plugins.append((name, callback))
 
-    def train(self, data, pipline: list[Node]):
-        data = data
-        trainer = d2l.Trainer(max_epochs=3)
-        
-        print("pipline: ", pipline)
-        model = []
+    def train(self, data, pipline: list[Node], **train_params):
+        sequential = []
         for layer in pipline:
+            params = dict()
             for param in layer._params:
-                setattr(layer._data, param._label, dpg.get_value(param.uuid))
-            model.append(layer._data)  
-        print(model)
-        net = CustomSequential(*model)
+                params[param._label] = dpg.get_value(param.uuid)
+            sequential.append(layer._data(**params))  
+        
+        net = train_params.pop('Task')
+        net = net(0.03, sequential, **train_params)
+        print("pipline: ", net)
+        trainer = d2l.Trainer(max_epochs=10)
         trainer.fit(net, data)
 
 
     def piplines(self):
         print("\tTrainig!")
+        train_params = dict()
+        for param in self.param_container._children:
+            train_params[param.label] = param.choices[dpg.get_value(param.uuid)]
+        print("\n\n\ttrain params: ", train_params)
+
+
         for node in self.node_editor._nodes:
             if isinstance(node, DataNode):
+                data_params = dict()
+                if len(node._params):
+                    for data_param in node._params:
+                        data_params[data_param._label] = dpg.get_value(data_param.uuid)
+                    data = node._data(**data_params)
+                else:
+                    data = node._data 
                 for model_init in node._output_attributes[0]._children:
                     model_init = model_init._data
-                    pipline: list[Node] = [node, model_init]
+                    pipline: list[Node] = [data, model_init]
                     while len(linked_node := model_init._output_attributes[0]._children):
                         pipline.append(linked_node[0]._data)
                         model_init = linked_node[0]._data
-                    self.train(pipline[0].data, pipline[1:])
+                    progress_board = node._output_attributes[1]._children
+                    print('\n\n\t\tpipline: ', pipline)
+                    if len(progress_board):
+                        self.train(pipline[0], pipline[1:], widget=progress_board[0]._data, **train_params)
+                    else: 
+                        self.train(pipline[0], pipline[1:], **train_params)
                 
 
     def start(self):
@@ -533,6 +528,7 @@ class App:
                 with dpg.group(id=self.right_panel):
                     self.utility_container.submit(self.right_panel)
                     self.tool_container.submit(self.right_panel)
+                    self.param_container.submit(self.right_panel)
                     dpg.add_button(label='Train', callback=self.piplines)
                     
 
