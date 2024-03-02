@@ -1,7 +1,9 @@
+from typing import Union
 import dearpygui.dearpygui as dpg
 import torch
 from d2l import torch as d2l
 from torch import nn
+import pandas as pd
 import matplotlib.pyplot as plt
 
 ########################################################################################################################
@@ -43,10 +45,12 @@ class OutputNodeAttribute:
         self._data = None
 
     def add_child(self, parent, child):
-
-        dpg.add_node_link(self.uuid, child.uuid, parent=parent)
         child.set_parent(self)
         self._children.append(child)
+
+    def remove_child(self, parent, child):
+        self._children.remove(child)
+        child.reset_parent(self)
 
     def execute(self, data):
         self._data = data
@@ -56,7 +60,7 @@ class OutputNodeAttribute:
     def submit(self, parent):
 
         with dpg.node_attribute(parent=parent, attribute_type=dpg.mvNode_Attr_Output,
-                                user_data=self, id=self.uuid):
+                                user_data=self, tag=self.uuid):
             dpg.add_text(self._label)
 
 
@@ -75,10 +79,50 @@ class InputNodeAttribute:
     def set_parent(self, parent: OutputNodeAttribute):
         self._parent = parent
 
+    def reset_parent(self, parent: OutputNodeAttribute):
+        self._parent = None
+
     def submit(self, parent):
 
         with dpg.node_attribute(parent=parent, user_data=self, attribute_type=dpg.mvNode_Attr_Input, id=self.uuid):
             dpg.add_text(self._label)
+
+class LinkNode:
+
+    def __init__(self, input_uuid=None, output_uuid=None, parent=None):
+
+        self.uuid = dpg.generate_uuid()
+        self._input_attr = input_uuid
+        self._output_attr = output_uuid
+        self._parent = parent
+
+    def get_attrs(self):
+        return self._input_attr, self._output_attr
+
+    @staticmethod
+    def _link_callback(node_editor_uuid, app_data, user_data=None):
+        output_attr_uuid, input_attr_uuid = app_data
+
+        input_attr: InputNodeAttribute = dpg.get_item_user_data(input_attr_uuid)
+        output_attr: OutputNodeAttribute = dpg.get_item_user_data(output_attr_uuid)
+
+        link_node = LinkNode(input_attr_uuid, output_attr_uuid, node_editor_uuid)
+        dpg.add_node_link(*link_node.get_attrs(), parent=node_editor_uuid, user_data=link_node, tag=link_node.uuid)
+        output_attr.add_child(node_editor_uuid, input_attr)
+
+
+    @staticmethod
+    def _delink_callback(node_editor_id, link_id):
+        link: LinkNode = dpg.get_item_user_data(link_id)
+        input_attr_uuid, output_attr_uuid = link.get_attrs()
+
+        input_attr: InputNodeAttribute = dpg.get_item_user_data(input_attr_uuid)
+        output_attr: OutputNodeAttribute = dpg.get_item_user_data(output_attr_uuid)
+
+        output_attr.remove_child(node_editor_id, input_attr)
+        dpg.delete_item(link.uuid)
+        del link
+
 
 class ParamNode:
 
@@ -98,12 +142,16 @@ class ParamNode:
                     dpg.add_input_int(**self._params, label=self._label, tag=self.uuid)
                 case 'float':
                     dpg.add_input_float(**self._params, label=self._label, tag=self.uuid)
+                case 'combo':
+                    dpg.add_combo(**self._params, label=self._label, tag=self.uuid)
+                case 'button':
+                    dpg.add_button(**self._params, label=self._label, tag=self.uuid, user_data=dpg.get_item_user_data(parent))
                     
                     
 
 class Node:
 
-    def __init__(self, label: str, data):
+    def __init__(self, label: str, data=None, **node_params):
 
         self.label = label
         self.uuid = dpg.generate_uuid()
@@ -112,6 +160,7 @@ class Node:
         self._output_attributes: list[OutputNodeAttribute] = []
         self._params: list[ParamNode] = []
         self._data = data
+        self.node_params = node_params #if len(node_params) else None 
 
     def finish(self):
         dpg.bind_item_theme(self.uuid, _completion_theme)
@@ -122,9 +171,9 @@ class Node:
     def add_output_attribute(self, attribute: OutputNodeAttribute):
         self._output_attributes.append(attribute)
 
-    def add_params(self, params: list[ParamNode]):
+    def add_params(self, params: list[dict]):
         if params:
-            self._params += params
+            self._params += [ParamNode(**param) for param in params] 
 
     def custom(self):
         pass
@@ -137,7 +186,7 @@ class Node:
 
     def submit(self, parent):
 
-        with dpg.node(parent=parent, label=self.label, tag=self.uuid):
+        with dpg.node(**self.node_params, parent=parent, label=self.label, tag=self.uuid, user_data=self):
 
             for attribute in self._input_attributes:
                 attribute.submit(self.uuid)
@@ -155,15 +204,7 @@ class Node:
 
 class NodeEditor:
 
-    @staticmethod
-    def _link_callback(sender, app_data, user_data):
-        output_attr_uuid, input_attr_uuid = app_data
-
-        input_attr: InputNodeAttribute = dpg.get_item_user_data(input_attr_uuid)
-        output_attr: OutputNodeAttribute = dpg.get_item_user_data(output_attr_uuid)
-
-        output_attr.add_child(sender, input_attr)
-
+    
     def __init__(self):
 
         self._nodes: list[Node] = []
@@ -173,16 +214,23 @@ class NodeEditor:
         self._nodes.append(node)
 
     def on_drop(self, sender, app_data, user_data):
-        source, generator, data, params = app_data
-        node: Node = generator(source.label, data, params)
+        source, generator, data, params, default_params = app_data
+        node: Node = generator(source.label, data, params, default_params)
         node.submit(self.uuid)
         self.add_node(node)
+
+    def clear(self):
+        dpg.delete_item(self.uuid, children_only=True)
+        self._nodes.clear()
+
 
     def submit(self, parent):
         
         with dpg.child_window(width=-160, parent=parent, user_data=self, 
                               drop_callback=lambda s, a, u: dpg.get_item_user_data(s).on_drop(s, a, u)):
-            with dpg.node_editor(tag=self.uuid, callback=NodeEditor._link_callback, width=-1, height=-1):
+            with dpg.node_editor(callback=LinkNode._link_callback,
+                                 delink_callback=LinkNode._delink_callback,
+                                 tag=self.uuid, width=-1, height=-1):
                 for node in self._nodes:
                     node.submit(self.uuid)
 
@@ -192,19 +240,20 @@ class NodeEditor:
 ########################################################################################################################
 class DragSource:
 
-    def __init__(self, label: str, node_generator, data=None, params: list[ParamNode]=None):
+    def __init__(self, label: str, node_generator, data=None, params: list[dict]=None, default_params: dict[str, str]= None):
 
         self.label = label
         self._generator = node_generator
         self._data = data
         self._params = params
+        self._default_params = default_params
 
     def submit(self, parent):
 
         dpg.add_button(label=self.label, parent=parent, width=-1)
         dpg.bind_item_theme(dpg.last_item(), _source_theme)
 
-        with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self, self._generator, self._data, self._params)):
+        with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self, self._generator, self._data, self._params, self._default_params)):
             dpg.add_text(f"Name: {self.label}")
 
 
@@ -231,44 +280,6 @@ class DragSourceContainer:
             for child in self._children:
                 child.submit(child_parent)
 
-class ParamSource:
-
-    def __init__(self, label: str, choices:dict, **params):
-
-        self.uuid = dpg.generate_uuid()
-        self.label = label
-        self.choices = choices
-        self.params=params
-
-    def submit(self, parent):
-        dpg.add_combo(**self.params, label=self.label, parent=parent, 
-                      items=list(self.choices.keys()), 
-                      tag=self.uuid)
-        dpg.bind_item_theme(dpg.last_item(), _source_theme)
-
-
-
-class ParamContainer:
-
-    def __init__(self, label: str, width: int = 150, height: int = -1):
-
-        self._label = label
-        self._width = width
-        self._height = height
-        self._uuid = dpg.generate_uuid()
-        self._children: list[ParamSource] = []  # params
-
-    def add_param(self, source: ParamSource):
-        self._children.append(source)
-
-    def submit(self, parent):
-
-        with dpg.child_window(parent=parent, width=self._width, height=self._height, tag=self._uuid, menubar=True) as child_parent:
-            with dpg.menu_bar():
-                dpg.add_menu(label=self._label, enabled=False)
-
-            for child in self._children:
-                child.submit(child_parent)
 
 
 ########################################################################################################################
@@ -277,16 +288,35 @@ class ParamContainer:
 class UtilityNode(Node):
 
     @staticmethod
-    def factory(name, data, params=None):
-        node = UtilityNode(name, data, params)
+    def factory(name, data, params: list[dict]=None, default_params: dict[str,str]=None,**node_params):
+        node = UtilityNode(name, data, params, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data, params=None):
-        super().__init__(label, data)
+    def __init__(self, label: str, data, params: list[dict]=None, default_params: dict[str,str]=None, **node_params):
+        super().__init__(label, data, **node_params)
 
         self.add_input_attribute(InputNodeAttribute("data", self))
         self.add_output_attribute(OutputNodeAttribute("processed data"))
         self.add_params(params)
+
+
+class TrainParamsNode(Node):
+
+    @staticmethod
+    def factory(name, data=None, train_params: list[dict]=None, **node_params):
+        node = TrainParamsNode(name, data, train_params, **node_params)
+        return node
+
+    def __init__(self, label: str, data=None, train_params: list[dict]=None, **node_params):
+        super().__init__(label, data, **node_params)
+
+        self.pipline: Pipline = None
+        self.add_input_attribute(InputNodeAttribute("train dataset", self))
+        self.add_params(train_params)
+
+
+    def set_pipline(self, pipline):
+        self.pipline = pipline
 
 
 
@@ -297,12 +327,12 @@ class UtilityNode(Node):
 class LayerNode(Node):
 
     @staticmethod
-    def factory(name, data, params=None):
-        node = LayerNode(name, data, params)
+    def factory(name, data, params:list[dict]=None, default_params: dict[str,str]=None, **node_params):
+        node = LayerNode(name, data, params, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data, params=None):
-        super().__init__(label, data)
+    def __init__(self, label: str, data, params:list[dict]=None, default_params: dict[str,str]=None, **node_params):
+        super().__init__(label, data, **node_params)
 
         self.add_input_attribute(InputNodeAttribute("data", self))
         self.add_output_attribute(OutputNodeAttribute("weighted data"))
@@ -316,12 +346,12 @@ class LayerNode(Node):
 class ViewNode_2D(Node):
 
     @staticmethod
-    def factory(name, data=None, params=None):
-        node = ViewNode_2D(name, data, params)
+    def factory(name, data=None, params:list[dict]=None, default_params: dict[str,str]=None, **node_params):
+        node = ViewNode_2D(name, data, params, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data=None, params=None):
-        super().__init__(label, data)
+    def __init__(self, label: str, data=None, params:list[dict]=None, default_params: dict[str,str]=None, **node_params):
+        super().__init__(label, data, **node_params)
 
         self.add_input_attribute(InputNodeAttribute("full dataset", self))
         self.add_params(params)
@@ -356,16 +386,41 @@ class ViewNode_2D(Node):
 class DataNode(Node):
 
     @staticmethod
-    def factory(name, data, params=None):
-        node = DataNode(name, data, params)
+    def factory(name, data, params:list[dict]=None, default_params: dict[str, str]=None,**node_params):
+        node = DataNode(name, data, params, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data, params=None):
-        super().__init__(label, data)
+    def __init__(self, label: str, data, params:list[dict]=None, default_params: dict[str, str]=None, **node_params):
+        super().__init__(label, data, **node_params)
         self.add_output_attribute(OutputNodeAttribute("data"))
         self.add_output_attribute(OutputNodeAttribute("train graph"))
+        self.add_output_attribute(OutputNodeAttribute("train params"))
         self.add_params(params)
+        self.train_params: TrainParamsNode = None
         self.uuid = dpg.generate_uuid()
+        self._default_params = default_params
+
+
+    def submit(self, parent):
+        super().submit(parent)
+        losses = {"MSE":nn.MSELoss, "Cross Entropy Loss":nn.CrossEntropyLoss}
+        tasks = {"Regression": RegressNet, "Classification":ClassifierNet}
+
+
+        self.train_params = TrainParamsNode('Train Params',
+                                       train_params=[
+                                            {"label":"Loss", "type":'combo', "default_value":self._default_params['Loss'], "width":150,
+                                             "items":tuple(losses.keys()), "user_data":losses},
+                                            {"label":"Task", "type":'combo', "default_value":self._default_params['Task'], "width":150,
+                                             "items":tuple(losses.keys()), "user_data":tasks},
+                                            {"label":"Learning Rate", "type":'float', "default_value":0.05, "width":150},
+                                            {"label":"Max Epoches", "type":'int', "default_value":2, "width":150},
+                                            {"label":"Save Weights", "type":"button", "callback":Pipline.save_weight}
+                                           ],
+                                       pos=(100, 500))
+        
+        self.train_params.submit(parent)
+        LinkNode._link_callback(parent, (self._output_attributes[2].uuid, self.train_params._input_attributes[0].uuid))
 
 
 class RegressNet(d2l.Module):
@@ -391,6 +446,76 @@ class ClassifierNet(d2l.Classifier):
         fn= self.loss_func()
         return fn(y_hat, y)
     
+
+class Pipline:
+
+    def __init__(self, init_node: DataNode):
+        self.pipline = [Pipline.init_layer(init_node)]
+        init_node.train_params.set_pipline(self)
+        self.train_params = Pipline.get_params(init_node.train_params)
+        self.weight = self.train_params.pop("Save Weights")
+        print("\n\n\ttrain params: ", self.train_params)
+
+        self.progress_board: list = init_node._output_attributes[1]._children
+        self.progress_board: Union[ViewNode_2D, None] = self.progress_board[0]._data if len(self.progress_board) else None
+        
+
+
+    @staticmethod
+    def init_layer(layer: Node) -> any:
+        params = dict()
+        if len(layer._params):
+            for param in layer._params:
+                params[param._label] = dpg.get_value(param.uuid)
+            return layer._data(**params)
+        else:
+            return layer._data()
+        
+
+    @staticmethod
+    def get_params(params_node: TrainParamsNode) -> dict:
+        train_params = dict()
+        for param in params_node._params:
+            choices = dpg.get_item_user_data(param.uuid)
+            if isinstance(choices, dict):
+                train_params[param._label] = choices[dpg.get_value(param.uuid)]
+            else:
+                train_params[param._label] = dpg.get_value(param.uuid)
+        return train_params
+    
+    @staticmethod
+    def save_weight(sender, app_data, train_params):
+        self = train_params.pipline
+        if self:
+            pd.DataFrame(["weight","Not Implemented"]).to_excel("train.xlsx")
+            with open("train.txt", 'w') as file:
+                file.write("Not Implemented")
+    
+
+    def collect_layers(self, node: Node):
+        self.pipline.append(Pipline.init_layer(node))
+        
+        while len(node := node._output_attributes[0]._children):
+            node = node[0]._data
+            self.pipline.append(Pipline.init_layer(node))
+        
+
+    def train(self):
+        data = self.pipline[0]
+        sequential = self.pipline[1:]
+
+        net = self.train_params.pop('Task')
+        max_epochs = self.train_params.pop('Max Epoches')
+        self.net = net(self.train_params.pop('Learning Rate'), sequential, widget=self.progress_board, **self.train_params)
+        print("pipline: ", self.net)
+        self.trainer = d2l.Trainer(max_epochs=max_epochs)
+        self.trainer.fit(self.net, data)
+
+
+    
+    
+    
+    
 ########################################################################################################################
 # Application
 ########################################################################################################################
@@ -401,21 +526,25 @@ class App:
         self.dataset_container = DragSourceContainer("Datasets", 150, -500)
         self.layer_container = DragSourceContainer("Layers", 150, -1)
         self.utility_container = DragSourceContainer("Utilities", 150, -500)
-        self.tool_container = DragSourceContainer("Tools", 150, -150)
-        self.param_container = ParamContainer("Parameters", 150, -30)
+        self.tool_container = DragSourceContainer("Tools", 150, -30)
+
         self.plugin_menu_id = dpg.generate_uuid()
         self.left_panel = dpg.generate_uuid()
-        self.node_editor = NodeEditor()
         self.right_panel = dpg.generate_uuid()
+
+        self.node_editor = NodeEditor()
+        
 
         self.plugins = []
         self.dataset_container.add_drag_source(DragSource("Synthetic Regression Data", 
                                                           DataNode.factory, 
-                                                          d2l.SyntheticRegressionData(w=torch.tensor([2, -3.4]), b=4.2)))
+                                                          d2l.SyntheticRegressionData(w=torch.tensor([2, -3.4]), b=4.2),
+                                                          default_params={'Loss': 'MSE', 'Task':'Regression'}))
         self.dataset_container.add_drag_source(DragSource("FashionMNIST", 
                                                           DataNode.factory, 
                                                           d2l.FashionMNIST,
-                                                          [ParamNode("batch_size", 'int', step=2, width=150, min_value=2, min_clamped=True, default_value=64)]))
+                                                          [{"label":"batch_size", "type":'int', "step":2, "width":150, "min_value":2, "min_clamped":True, "default_value":64}],
+                                                          default_params={'Loss':'Cross Entropy Loss','Task':'Classification'}))
         
         self.utility_container.add_drag_source(DragSource("Flatten",
                                                           UtilityNode.factory,
@@ -424,19 +553,28 @@ class App:
         self.layer_container.add_drag_source(DragSource("Linear Layer", 
                                                         LayerNode.factory, 
                                                         nn.LazyLinear,
-                                                        [ParamNode("out_features", 'int', step=1, width=150, min_value=1, min_clamped=True, default_value=1)]))
+                                                        [{"label":"out_features", "type":'int', "step":1, "width":150, "min_value":1, "min_clamped":True, "default_value":1}]))
+        # self.layer_container.add_drag_source(DragSource("LazyConv1d", 
+        #                                                 LayerNode.factory, 
+        #                                                 nn.LazyConv1d,
+        #                                                 [ParamNode("out_channels", 'int', step=1, width=150, min_value=1, min_clamped=True, default_value=1)]
+        #                                                 ))
+        # self.layer_container.add_drag_source(DragSource("LazyConv2d", 
+        #                                                 LayerNode.factory, 
+        #                                                 nn.LazyConv2d,
+        #                                                 [ParamNode("out_channels", 'int', step=1, width=150, min_value=1, min_clamped=True, default_value=1)]
+        #                                                 ))
+        # self.layer_container.add_drag_source(DragSource("LazyConv3d", 
+        #                                                 LayerNode.factory, 
+        #                                                 nn.LazyConv3d,
+        #                                                 [ParamNode("out_channels", 'int', step=1, width=150, min_value=1, min_clamped=True, default_value=1)]
+        #                                                 ))
         
         self.tool_container.add_drag_source(DragSource("Progress Board", 
                                                         ViewNode_2D.factory))
         
-        self.param_container.add_param(ParamSource("Loss",
-                                                   {'MSE': nn.MSELoss, 'Cross Entropy Loss':nn.CrossEntropyLoss},
-                                                   default_value='MSE'))
-        self.param_container.add_param(ParamSource("Task",
-                                                   {'Regression': RegressNet, 'Classifier': ClassifierNet},
-                                                   default_value='Regression'))
-        
 
+        
     def update(self):
 
         with dpg.mutex():
@@ -452,51 +590,19 @@ class App:
     def add_plugin(self, name, callback):
         self.plugins.append((name, callback))
 
-    def train(self, data, pipline: list[Node], **train_params):
-        sequential = []
-        for layer in pipline:
-            params = dict()
-            for param in layer._params:
-                params[param._label] = dpg.get_value(param.uuid)
-            sequential.append(layer._data(**params))  
-        
-        net = train_params.pop('Task')
-        net = net(0.03, sequential, **train_params)
-        print("pipline: ", net)
-        trainer = d2l.Trainer(max_epochs=10)
-        trainer.fit(net, data)
-
 
     def piplines(self):
         print("\tTrainig!")
-        train_params = dict()
-        for param in self.param_container._children:
-            train_params[param.label] = param.choices[dpg.get_value(param.uuid)]
-        print("\n\n\ttrain params: ", train_params)
-
 
         for node in self.node_editor._nodes:
             if isinstance(node, DataNode):
-                data_params = dict()
-                if len(node._params):
-                    for data_param in node._params:
-                        data_params[data_param._label] = dpg.get_value(data_param.uuid)
-                    data = node._data(**data_params)
-                else:
-                    data = node._data 
                 for model_init in node._output_attributes[0]._children:
-                    model_init = model_init._data
-                    pipline: list[Node] = [data, model_init]
-                    while len(linked_node := model_init._output_attributes[0]._children):
-                        pipline.append(linked_node[0]._data)
-                        model_init = linked_node[0]._data
-                    progress_board = node._output_attributes[1]._children
-                    print('\n\n\t\tpipline: ', pipline)
-                    if len(progress_board):
-                        self.train(pipline[0], pipline[1:], widget=progress_board[0]._data, **train_params)
-                    else: 
-                        self.train(pipline[0], pipline[1:], **train_params)
+                    pipline = Pipline(node)
+                    pipline.collect_layers(model_init._data)
+                    pipline.train()
                 
+
+   
 
     def start(self):
         #dpg.setup_registries()
@@ -508,7 +614,7 @@ class App:
             with dpg.menu_bar():
 
                 with dpg.menu(label="Operations"):
-                    dpg.add_menu_item(label="Reset", callback=lambda: dpg.delete_item(self.node_editor.uuid, children_only=True))
+                    dpg.add_menu_item(label="Reset", callback=self.node_editor.clear)
 
                 with dpg.menu(label="Plugins"):
                     for plugin in self.plugins:
@@ -528,7 +634,6 @@ class App:
                 with dpg.group(id=self.right_panel):
                     self.utility_container.submit(self.right_panel)
                     self.tool_container.submit(self.right_panel)
-                    self.param_container.submit(self.right_panel)
                     dpg.add_button(label='Train', callback=self.piplines)
                     
 
