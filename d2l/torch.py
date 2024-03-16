@@ -184,14 +184,16 @@ class Module(d2l.nn_Module, d2l.HyperParameters):
     """The base class of models.
 
     Defined in :numref:`sec_oo-design`"""
-    def __init__(self, plot_train_per_epoch=2, plot_valid_per_epoch=1, widget=None):
+    def __init__(self, lr=0.1, Loss=None, sequential: list=None, plot_train_per_epoch=2, plot_valid_per_epoch=1, widget=None):
         super().__init__()
         print(widget)
         self.save_hyperparameters()
         self.board = ProgressBoard(widget=widget)
+        self.net = nn.Sequential(*sequential)
 
     def loss(self, y_hat, y):
-        raise NotImplementedError
+        fn = self.Loss()
+        return fn(y_hat, y)
 
     def forward(self, X):
         assert hasattr(self, 'net'), 'Neural network is defined'
@@ -423,6 +425,7 @@ class LinearRegression(d2l.Module):
         """Defined in :numref:`sec_linear_concise`"""
         fn = nn.MSELoss()
         return fn(y_hat, y)
+    
 
     def configure_optimizers(self):
         """Defined in :numref:`sec_linear_concise`"""
@@ -491,12 +494,6 @@ class Classifier(d2l.Module):
         compare = d2l.astype(preds == d2l.reshape(Y, -1), d2l.float32)
         return d2l.reduce_mean(compare) if averaged else compare
 
-    def loss(self, Y_hat, Y, averaged=True):
-        """Defined in :numref:`sec_softmax_concise`"""
-        Y_hat = d2l.reshape(Y_hat, (-1, Y_hat.shape[-1]))
-        Y = d2l.reshape(Y, (-1,))
-        return F.cross_entropy(
-            Y_hat, Y, reduction='mean' if averaged else 'none')
 
     def layer_summary(self, X_shape):
         """Defined in :numref:`sec_lenet`"""

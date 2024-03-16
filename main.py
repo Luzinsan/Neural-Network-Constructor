@@ -3,6 +3,7 @@ import dearpygui.dearpygui as dpg
 import torch
 from d2l import torch as d2l
 from torch import nn
+import torchvision.datasets as ds
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -124,6 +125,22 @@ class LinkNode:
         del link
 
 
+def select_path(sender, app_data, user_data):
+    dpg.set_item_user_data('file_dialog', user_data)
+    dpg.show_item('file_dialog')
+
+
+def set_path(sender, app_data):
+    tag_path = dpg.get_item_user_data('file_dialog')
+    dpg.configure_item(tag_path, default_value=app_data['file_path_name'])
+
+
+with dpg.file_dialog(directory_selector=False, show=False, callback=set_path, tag="file_dialog",
+                     width=700, height=400, modal=True):
+    # dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Calc]")
+    dpg.add_file_extension(".params", color=(0, 255, 0, 255), custom_text="[Params]")
+
+
 class ParamNode:
 
     def __init__(self, label: str, type: str, **params):
@@ -145,7 +162,12 @@ class ParamNode:
                 case 'combo':
                     dpg.add_combo(**self._params, label=self._label, tag=self.uuid)
                 case 'button':
-                    dpg.add_button(**self._params, label=self._label, tag=self.uuid, user_data=dpg.get_item_user_data(parent))
+                    dpg.add_button(**self._params, label=self._label, tag=self.uuid)
+                case 'file':
+                    with dpg.group(horizontal=True):
+                        dpg.add_input_text(width=150, no_spaces=True, tag=self.uuid)
+                        dpg.add_button(label="Path", user_data=self.uuid, callback=select_path)
+                    dpg.add_button(**self._params, label=self._label, user_data=(dpg.get_item_user_data(parent), self.uuid))
                     
                     
 
@@ -358,11 +380,12 @@ class ViewNode_2D(Node):
 
         self.x_axis = dpg.generate_uuid()
         self.y_axis = dpg.generate_uuid()
+        self.plot = dpg.generate_uuid()
         
 
     def custom(self):
 
-        with dpg.plot(height=400, width=400, no_title=True):
+        with dpg.plot(height=400, width=400, no_title=True, tag=self.plot):
             dpg.add_plot_axis(dpg.mvXAxis, label="epoch", tag=self.x_axis)
             # dpg.set_axis_limits(dpg.last_item(), 0, 10)
             dpg.add_plot_axis(dpg.mvYAxis, label="estimates", tag=self.y_axis)
@@ -403,8 +426,12 @@ class DataNode(Node):
 
     def submit(self, parent):
         super().submit(parent)
-        losses = {"MSE":nn.MSELoss, "Cross Entropy Loss":nn.CrossEntropyLoss}
-        tasks = {"Regression": RegressNet, "Classification":ClassifierNet}
+        losses = {"MSE (squared L2)": nn.MSELoss, "Cross Entropy Loss": nn.CrossEntropyLoss, "L1 Loss": nn.L1Loss}
+        tasks = {
+                #  "Regression": d2l.Module, 
+                 "Classification":d2l.Classifier}
+        
+        
 
 
         self.train_params = TrainParamsNode('Train Params',
@@ -412,10 +439,13 @@ class DataNode(Node):
                                             {"label":"Loss", "type":'combo', "default_value":self._default_params['Loss'], "width":150,
                                              "items":tuple(losses.keys()), "user_data":losses},
                                             {"label":"Task", "type":'combo', "default_value":self._default_params['Task'], "width":150,
-                                             "items":tuple(losses.keys()), "user_data":tasks},
+                                             "items":tuple(tasks.keys()), "user_data":tasks},
                                             {"label":"Learning Rate", "type":'float', "default_value":0.05, "width":150},
                                             {"label":"Max Epoches", "type":'int', "default_value":2, "width":150},
-                                            {"label":"Save Weights", "type":"button", "callback":Pipline.save_weight}
+                                            {"label":"Save Weights", "type":"file", "callback":Pipline.save_weight},
+                                            {"label":"Load Weights", "type":"file", "callback":Pipline.load_weight},
+                                            {"label":"Train", "type":"button", "callback":Pipline.flow, "user_data":self},
+                                            {"label":"Continue Train", "type":"button", "callback":Pipline.keep_train, "user_data":self}
                                            ],
                                        pos=(100, 500))
         
@@ -423,59 +453,78 @@ class DataNode(Node):
         LinkNode._link_callback(parent, (self._output_attributes[2].uuid, self.train_params._input_attributes[0].uuid))
 
 
-class RegressNet(d2l.Module):
-    def __init__(self, lr, sequential: list, Loss, widget=None):
-        super().__init__(widget=widget)
-        self.save_hyperparameters()
-        self.net = nn.Sequential(*sequential)
-        self.loss_func=Loss
 
-    def loss(self, y_hat, y):
-        fn= self.loss_func()
-        return fn(y_hat, y)
-    
-    
-class ClassifierNet(d2l.Classifier):
-    def __init__(self, lr, sequential: list, Loss, widget=None):
-        super().__init__(widget=widget)
-        self.save_hyperparameters()
-        self.net = nn.Sequential(*sequential)
-        self.loss_func=Loss
-
-    def loss(self, y_hat, y):
-        fn= self.loss_func()
-        return fn(y_hat, y)
-    
 
 class Pipline:
+
+    @staticmethod
+    def flow(sender=None, app_data=None, data_node=None, fake=False):
+        assert data_node
+        try:
+            for model_init in data_node._output_attributes[0]._children:
+                self = Pipline(data_node)
+                self.collect_layers(model_init._data)
+                self.train(fake)
+        except BaseException as err:
+            raise LookupError("Error in flow")
+        return self
+    
+    @staticmethod
+    def keep_train(sender=None, app_data=None, data_node:DataNode=None):
+        self = data_node.train_params.pipline
+        if self:
+            try:
+                self.max_epoches = Pipline.get_params(data_node.train_params)['Max Epoches']
+                self.train()
+            except BaseException as err:
+                raise RuntimeError("Error in keep training")
+        else:
+            Pipline.flow(data_node=data_node)
+        
+        
 
     def __init__(self, init_node: DataNode):
         self.pipline = [Pipline.init_layer(init_node)]
         init_node.train_params.set_pipline(self)
         self.train_params = Pipline.get_params(init_node.train_params)
-        self.weight = self.train_params.pop("Save Weights")
         print("\n\n\ttrain params: ", self.train_params)
 
         self.progress_board: list = init_node._output_attributes[1]._children
         self.progress_board: Union[ViewNode_2D, None] = self.progress_board[0]._data if len(self.progress_board) else None
         
+    @staticmethod
+    def init_normal(module: nn.Module):
+        if type(module) == nn.Linear:
+            nn.init.normal_(module.weight, mean=0, std=0.01)
+            nn.init.zeros_(module.bias)
 
+    @staticmethod
+    def init_xavier(module):
+        if type(module) == nn.Linear:
+            nn.init.xavier_uniform_(module.weight)
+    
 
     @staticmethod
     def init_layer(layer: Node) -> any:
         params = dict()
         if len(layer._params):
+            init_dict = dict()
             for param in layer._params:
-                params[param._label] = dpg.get_value(param.uuid)
+                key = param._label
+                if key == 'Initialization':
+                    init_dict = dpg.get_item_user_data(param.uuid)
+                params[key] = dpg.get_value(param.uuid)
+            
+            if 'Initialization' in params.keys() and (init_func := init_dict[params.pop("Initialization")]):
+                return layer._data(**params).apply(init_func)
             return layer._data(**params)
-        else:
-            return layer._data()
+        return layer._data()
         
 
     @staticmethod
     def get_params(params_node: TrainParamsNode) -> dict:
         train_params = dict()
-        for param in params_node._params:
+        for param in params_node._params[:-4]:
             choices = dpg.get_item_user_data(param.uuid)
             if isinstance(choices, dict):
                 train_params[param._label] = choices[dpg.get_value(param.uuid)]
@@ -483,13 +532,30 @@ class Pipline:
                 train_params[param._label] = dpg.get_value(param.uuid)
         return train_params
     
+    
     @staticmethod
-    def save_weight(sender, app_data, train_params):
+    def save_weight(sender, app_data, train_params__file: tuple[2]):
+        train_params, filepath_uuid = train_params__file
         self = train_params.pipline
         if self:
-            pd.DataFrame(["weight","Not Implemented"]).to_excel("train.xlsx")
-            with open("train.txt", 'w') as file:
-                file.write("Not Implemented")
+            filepath = dpg.get_value(filepath_uuid)
+            torch.save(self.net.state_dict(), filepath)
+
+    @staticmethod
+    def load_weight(sender, app_data, train_params__file: tuple[2]):
+        train_params, filepath_uuid = train_params__file
+        self: Pipline = train_params.pipline
+        if not self:
+            data_node = dpg.get_item_user_data(
+                            dpg.get_item_parent(train_params._input_attributes[0]._parent.uuid))  
+            self = Pipline.flow(data_node=data_node, fake=True)
+            
+        filepath = dpg.get_value(filepath_uuid)
+        try:
+            self.net.load_state_dict(torch.load(filepath))
+        except BaseException as err:
+            raise FileNotFoundError("Файл параметров не найден")
+        
     
 
     def collect_layers(self, node: Node):
@@ -498,18 +564,22 @@ class Pipline:
         while len(node := node._output_attributes[0]._children):
             node = node[0]._data
             self.pipline.append(Pipline.init_layer(node))
-        
-
-    def train(self):
-        data = self.pipline[0]
-        sequential = self.pipline[1:]
 
         net = self.train_params.pop('Task')
-        max_epochs = self.train_params.pop('Max Epoches')
-        self.net = net(self.train_params.pop('Learning Rate'), sequential, widget=self.progress_board, **self.train_params)
+        self.max_epoches = self.train_params.pop('Max Epoches')
+        self.net = net(self.train_params.pop('Learning Rate'), self.train_params.pop('Loss'), 
+                       self.pipline[1:], widget=self.progress_board)
         print("pipline: ", self.net)
-        self.trainer = d2l.Trainer(max_epochs=max_epochs)
-        self.trainer.fit(self.net, data)
+        
+
+    def train(self, fake=False):
+        axes = dpg.get_item_children(self.progress_board.plot, 1)
+        for axis in axes:
+            dpg.delete_item(axis, children_only=True, slot=1)
+        self.net.board = d2l.ProgressBoard(widget=self.progress_board)
+
+        self.trainer = d2l.Trainer(max_epochs=1 if fake else self.max_epoches)
+        self.trainer.fit(self.net, self.pipline[0])
 
 
     
@@ -536,10 +606,7 @@ class App:
         
 
         self.plugins = []
-        self.dataset_container.add_drag_source(DragSource("Synthetic Regression Data", 
-                                                          DataNode.factory, 
-                                                          d2l.SyntheticRegressionData(w=torch.tensor([2, -3.4]), b=4.2),
-                                                          default_params={'Loss': 'MSE', 'Task':'Regression'}))
+        
         self.dataset_container.add_drag_source(DragSource("FashionMNIST", 
                                                           DataNode.factory, 
                                                           d2l.FashionMNIST,
@@ -549,11 +616,26 @@ class App:
         self.utility_container.add_drag_source(DragSource("Flatten",
                                                           UtilityNode.factory,
                                                           nn.Flatten))
-                                               
+        self.utility_container.add_drag_source(DragSource("ReLU",
+                                                          UtilityNode.factory,
+                                                          nn.ReLU))
+        self.utility_container.add_drag_source(DragSource("Softmax",
+                                                          UtilityNode.factory,
+                                                          nn.Softmax))
+        self.utility_container.add_drag_source(DragSource("Tanh",
+                                                          UtilityNode.factory,
+                                                          nn.Tanh))
+        self.utility_container.add_drag_source(DragSource("GELU",
+                                                          UtilityNode.factory,
+                                                          nn.GELU))
+
+        init_params = {'Default':None, 'Normal': Pipline.init_normal, 'Xavier': Pipline.init_xavier } 
         self.layer_container.add_drag_source(DragSource("Linear Layer", 
                                                         LayerNode.factory, 
                                                         nn.LazyLinear,
-                                                        [{"label":"out_features", "type":'int', "step":1, "width":150, "min_value":1, "min_clamped":True, "default_value":1}]))
+                                                        [{"label":"out_features", "type":'int', "step":1, "width":150, "min_value":1, "min_clamped":True, "default_value":1},
+                                                         {"label":"Initialization", "type":'combo', "default_value":'Default', "width":150,
+                                                        "items":tuple(init_params.keys()), "user_data":init_params}]))
         # self.layer_container.add_drag_source(DragSource("LazyConv1d", 
         #                                                 LayerNode.factory, 
         #                                                 nn.LazyConv1d,
@@ -589,17 +671,6 @@ class App:
 
     def add_plugin(self, name, callback):
         self.plugins.append((name, callback))
-
-
-    def piplines(self):
-        print("\tTrainig!")
-
-        for node in self.node_editor._nodes:
-            if isinstance(node, DataNode):
-                for model_init in node._output_attributes[0]._children:
-                    pipline = Pipline(node)
-                    pipline.collect_layers(model_init._data)
-                    pipline.train()
                 
 
    
@@ -634,7 +705,9 @@ class App:
                 with dpg.group(id=self.right_panel):
                     self.utility_container.submit(self.right_panel)
                     self.tool_container.submit(self.right_panel)
-                    dpg.add_button(label='Train', callback=self.piplines)
+                    # with dpg.group(horizontal=True):
+                    #     dpg.add_button(label='Train', callback=self.piplines)
+                    #     dpg.add_button(label='Continue Train', callback=self.)
                     
 
         dpg.set_primary_window(main_window, True)
