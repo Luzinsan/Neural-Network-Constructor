@@ -184,12 +184,15 @@ class Module(d2l.nn_Module, d2l.HyperParameters):
     """The base class of models.
 
     Defined in :numref:`sec_oo-design`"""
-    def __init__(self, lr=0.1, Loss=None, sequential: list=None, plot_train_per_epoch=2, plot_valid_per_epoch=1, widget=None):
+    def __init__(self, lr=0.1, Loss=None, optimizer=None, sequential: list=None, plot_train_per_epoch=2, plot_valid_per_epoch=1, widget=None):
         super().__init__()
         print(widget)
         self.save_hyperparameters()
         self.board = ProgressBoard(widget=widget)
-        self.net = nn.Sequential(*sequential)
+        if sequential:
+            self.net = nn.Sequential(*sequential)
+        self.optimizer = optimizer
+
 
     def loss(self, y_hat, y):
         fn = self.Loss()
@@ -230,7 +233,7 @@ class Module(d2l.nn_Module, d2l.HyperParameters):
 
     def configure_optimizers(self):
         """Defined in :numref:`sec_classification`"""
-        return torch.optim.SGD(self.parameters(), lr=self.lr)
+        return self.optimizer(self.parameters(), lr=self.lr)
 
     def apply_init(self, inputs, init=None):
         """Defined in :numref:`sec_lazy_init`"""
@@ -569,18 +572,18 @@ class LeNet(d2l.Classifier):
     """The LeNet-5 model.
 
     Defined in :numref:`sec_lenet`"""
-    def __init__(self, lr=0.1, num_classes=10):
+    def __init__(self, lr=0.1, out_features=10):
         super().__init__()
         self.save_hyperparameters()
         self.net = nn.Sequential(
-            nn.LazyConv2d(6, kernel_size=5, padding=2), nn.Sigmoid(),
-            nn.AvgPool2d(kernel_size=2, stride=2),
-            nn.LazyConv2d(16, kernel_size=5), nn.Sigmoid(),
-            nn.AvgPool2d(kernel_size=2, stride=2),
+            nn.LazyConv2d(6, kernel_size=5, padding=2), nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.LazyConv2d(16, kernel_size=5), nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Flatten(),
-            nn.LazyLinear(120), nn.Sigmoid(),
-            nn.LazyLinear(84), nn.Sigmoid(),
-            nn.LazyLinear(num_classes))
+            nn.LazyLinear(120), nn.ReLU(),
+            nn.LazyLinear(84), nn.ReLU(),
+            nn.LazyLinear(out_features))
 
 class Residual(nn.Module):
     """The Residual block of ResNet models.
