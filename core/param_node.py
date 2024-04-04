@@ -20,6 +20,8 @@ class ParamNode:
                     dpg.add_input_int(**self._params, label=self._label, tag=self.uuid)
                 case 'float':
                     dpg.add_input_float(**self._params, label=self._label, tag=self.uuid)
+                case 'text'|'text/tuple':
+                    dpg.add_input_text(**self._params, label=self._label, tag=self.uuid)
                 case 'combo':
                     dpg.add_combo(**self._params, label=self._label, tag=self.uuid)
                 case 'button':

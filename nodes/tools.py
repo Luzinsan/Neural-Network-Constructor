@@ -1,7 +1,13 @@
 import dearpygui.dearpygui as dpg
 from core.node import Node
 from core.input_node_attr import InputNodeAttribute
+import collections
+from matplotlib_inline import backend_inline
+from matplotlib import pyplot as plt
 
+
+def use_svg_display():
+    backend_inline.set_matplotlib_formats('svg')
 
 class ViewNode_2D(Node):
 
@@ -25,22 +31,53 @@ class ViewNode_2D(Node):
 
         with dpg.plot(height=400, width=400, no_title=True, tag=self.plot):
             dpg.add_plot_axis(dpg.mvXAxis, label="epoch", tag=self.x_axis)
-            # dpg.set_axis_limits(dpg.last_item(), 0, 10)
             dpg.add_plot_axis(dpg.mvYAxis, label="estimates", tag=self.y_axis)
-            # dpg.set_axis_limits(dpg.last_item(), -0.1, 1)
             dpg.add_plot_legend()
 
+    def end(self, max_steps):
+        dpg.set_axis_limits(self.x_axis, 0, max_steps)
+        # dpg.set_axis_limits(self.y_axis, -0.1, 1)
 
-    def execute(self, plt_lines=None, labels=None):
+    
+    def draw(self, x, y, label, every_n=1, xlabel=None, ylabel=None, xlim=None,
+                 ylim=None, xscale='linear', yscale='linear',
+                 ls=['-', '--', '-.', ':'], colors=['C0', 'C1', 'C2', 'C3'],
+                 fig=None, axes=None, figsize=(3.5, 2.5)):
+        Point = collections.namedtuple('Point', ['x', 'y'])
+        if not hasattr(self, 'raw_points'):
+            self.raw_points = collections.OrderedDict()
+            self.data = collections.OrderedDict()
+        if label not in self.raw_points:
+            self.raw_points[label] = []
+            self.data[label] = []
+        points = self.raw_points[label]
+        line = self.data[label]
+        points.append(Point(x, y))
+        if len(points) != every_n:
+            return
+        mean = lambda x: sum(x) / len(x)
+        line.append(Point(mean([p.x for p in points]),
+                          mean([p.y for p in points])))
+        points.clear()
+        
+        use_svg_display()
+        plt_lines, labels = [], []
+        for (k, v), ls, color in zip(self.data.items(), ls, colors):
+            plt_lines.append(plt.plot([p.x for p in v], [p.y for p in v],
+                                          linestyle=ls, color=color)[0])
+            labels.append(k)
+        return (plt_lines, labels)
 
-        x_axis_id = self.x_axis
-        y_axis_id = self.y_axis
-        dpg.delete_item(y_axis_id, children_only=True)
-        for idx, line in enumerate(plt_lines):
-            x_orig_data, y_orig_data = line.get_xdata(), line.get_ydata()
-            dpg.add_line_series(x_orig_data, y_orig_data, parent=y_axis_id, label=labels[idx])
-        dpg.fit_axis_data(x_axis_id)
-        dpg.fit_axis_data(y_axis_id)
+    def execute(self, metrics: dict, x, every_n=1):
+        for label, y in metrics.items():
+            (plt_lines, labels) = self.draw(x, y, label)
+            dpg.delete_item(self.y_axis, children_only=True)
+            for idx, line in enumerate(plt_lines):
+                x_orig_data, y_orig_data = line.get_xdata(), line.get_ydata()
+                dpg.add_line_series(x_orig_data, y_orig_data, parent=self.y_axis, label=labels[idx])
+        
+        dpg.fit_axis_data(self.x_axis)
+        dpg.fit_axis_data(self.y_axis)
         self.finish()
 
 

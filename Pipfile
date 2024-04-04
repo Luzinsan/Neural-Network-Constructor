@@ -13,6 +13,10 @@ d2l = "*"
 torch = "*"
 torchvision = "*"
 simple-data-flow = "*"
+lightning = "*"
+tensorboard = "*"
+clearml = "*"
+ultralytics = "*"
 
 [dev-packages]
 

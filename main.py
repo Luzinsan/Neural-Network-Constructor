@@ -1,7 +1,6 @@
 
 import dearpygui.dearpygui as dpg
 import config.settings
-from d2l import torch as d2l
 from torch import nn
 import torchvision.datasets as ds
 from  core.node_editor import NodeEditor
@@ -11,8 +10,11 @@ from nodes.utility import UtilityNode
 from nodes.layer import LayerNode, ModuleNode
 from pipline import Pipline
 from nodes.tools import ViewNode_2D
+import torchvision.datasets as ds
 
-    
+
+
+
     
 class App:
 
@@ -30,11 +32,11 @@ class App:
         datasets = {
             "FashionMNIST": DragSource("FashionMNIST", 
                                         DataNode.factory, 
-                                        d2l.FashionMNIST,
+                                        ds.FashionMNIST,
                                         (
                                             {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
                                         ),
-                                        default_params={'Task':'Classification','Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
+                                        default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
             }
         self.dataset_container.add_drag_source(datasets.values())
         #endregion
@@ -57,6 +59,15 @@ class App:
                                             {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
                                             {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
+            "AdaptiveAvgPool2d":DragSource("AdaptiveAvgPool2d",
+                                        UtilityNode.factory,
+                                        nn.AdaptiveAvgPool2d,
+                                        (
+                                            {"label":"output_size", "type":'text/tuple', "width":WIDTH, "default_value":'(1, 2)'},
+                                        )),
+            "Dropout":      DragSource("Dropout",
+                                        UtilityNode.factory,
+                                        nn.Dropout),
             "ReLU":         DragSource("ReLU",
                                         UtilityNode.factory,
                                         nn.ReLU,
@@ -99,19 +110,42 @@ class App:
                                         )),
             
             }
+        
+
         layers['LeNet'] = DragSource("LeNet", 
-                                      ModuleNode.factory,
-                                      (
-                                          (layers['LazyConv2d'], {'out_channels':6,"kernel_size":5,"stride":1,"padding":3,"Initialization":"Xavier"}),(utilities['ReLU'], ),
-                                          (utilities['MaxPool2d'], {"kernel_size":2,"stride":2}),
-                                          (layers['LazyConv2d'], {'out_channels':16,"kernel_size":5,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
-                                          (utilities['MaxPool2d'], {"kernel_size":2,"stride":2}),
-                                          (utilities['Flatten'], ),
-                                          (layers['LazyLinear'], {'out_features':120, "Initialization":"Xavier"}), (utilities['ReLU'], ),
-                                          (layers['LazyLinear'], {'out_features':84, "Initialization":"Xavier"}), (utilities['ReLU'], ),
-                                          (layers['LazyLinear'], {'out_features':10, "Initialization":"Xavier"}),
-                                      ),
-                                      self.node_editor,)
+                                    ModuleNode.factory,
+                                    (
+                                        (datasets['FashionMNIST'], {"batch_size": 128}),
+                                        (layers['LazyConv2d'], {'out_channels':6,"kernel_size":5,"stride":1,"padding":3,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (utilities['MaxPool2d'], {"kernel_size":2,"stride":2}),
+                                        (layers['LazyConv2d'], {'out_channels':16,"kernel_size":5,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (utilities['MaxPool2d'], {"kernel_size":2,"stride":2}),
+                                        (utilities['Flatten'], ),
+                                        (layers['LazyLinear'], {'out_features':120, "Initialization":"Xavier"}), (utilities['ReLU'], ),
+                                        (layers['LazyLinear'], {'out_features':84, "Initialization":"Xavier"}), (utilities['ReLU'], ),
+                                        (layers['LazyLinear'], {'out_features':10, "Initialization":"Xavier"}),
+                                    ),
+                                    node_params={"node_editor":self.node_editor})
+        layers['NiN'] = DragSource("NiN",
+                                    ModuleNode.factory,
+                                    (
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':11, 'stride':4,'padding':0}),(utilities['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0}),(utilities['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0}),(utilities['ReLU'], )
+                                    ),
+                                    node_params={"node_editor":self.node_editor})
+        layers['NiN Net'] = DragSource("NiN Net",
+                                   ModuleNode.factory,
+                                   (
+                                       (datasets['FashionMNIST'], {"batch_size": 128}),
+                                       (layers['NiN'], {'out_channels':[96]*3, 'kernel_size':[11,1,1], 'stride':[4,1,1],'padding':[0]*3}),(utilities['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                       (layers['NiN'], {'out_channels':[256]*3, 'kernel_size':[5,1,1], 'stride':[1]*3,'padding':[2,0,0]}),(utilities['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                       (layers['NiN'], {'out_channels':[384]*3, 'kernel_size':[3,1,1], 'stride':[1]*3,'padding':[1,0,0]}),(utilities['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                       (utilities['Dropout'], {'p':0.5}),
+                                       (layers['NiN'], {'out_channels':[10]*3, 'kernel_size':[3,1,1], 'stride':[1]*3,'padding':[1,0,0]}),(utilities['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                       (utilities['AdaptiveAvgPool2d'], {'output_size':'(1,1)'}),(utilities['Flatten'],)
+                                   ),
+                                   node_params={"node_editor":self.node_editor})
         self.layer_container = DragSourceContainer("Layers", 150, -1)
         self.layer_container.add_drag_source(layers.values())
         #endregion
@@ -123,7 +157,6 @@ class App:
         self.tool_container = DragSourceContainer("Tools", 150, -30)
         self.tool_container.add_drag_source(tools.values())
         #endregion
-        
         
         
 
@@ -175,12 +208,13 @@ class App:
                     self.utility_container.submit(self.right_panel)
                     self.tool_container.submit(self.right_panel)
                     
-
+        
         dpg.set_primary_window(main_window, True)
         dpg.start_dearpygui()
+        
 
 
-if __name__ == "__main__":
 
-    app = App()
-    app.start()
+
+app = App()
+app.start()
