@@ -67,7 +67,10 @@ class App:
                                         )),
             "Dropout":      DragSource("Dropout",
                                         UtilityNode.factory,
-                                        nn.Dropout),
+                                        nn.Dropout,
+                                        (
+                                            {"label":"p", "type":'float', "width":WIDTH, "default_value":0.5},
+                                        )),
             "ReLU":         DragSource("ReLU",
                                         UtilityNode.factory,
                                         nn.ReLU,
@@ -115,7 +118,7 @@ class App:
         layers['LeNet'] = DragSource("LeNet", 
                                     ModuleNode.factory,
                                     (
-                                        (datasets['FashionMNIST'], {"batch_size": 128}),
+                                        
                                         (layers['LazyConv2d'], {'out_channels':6,"kernel_size":5,"stride":1,"padding":3,"Initialization":"Xavier"}),(utilities['ReLU'], ),
                                         (utilities['MaxPool2d'], {"kernel_size":2,"stride":2}),
                                         (layers['LazyConv2d'], {'out_channels':16,"kernel_size":5,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
@@ -123,6 +126,22 @@ class App:
                                         (utilities['Flatten'], ),
                                         (layers['LazyLinear'], {'out_features':120, "Initialization":"Xavier"}), (utilities['ReLU'], ),
                                         (layers['LazyLinear'], {'out_features':84, "Initialization":"Xavier"}), (utilities['ReLU'], ),
+                                        (layers['LazyLinear'], {'out_features':10, "Initialization":"Xavier"}),
+                                    ),
+                                    node_params={"node_editor":self.node_editor})
+        layers['AlexNet'] = DragSource("AlexNet", 
+                                    ModuleNode.factory,
+                                    (
+                                        (layers['LazyConv2d'], {'out_channels':96,"kernel_size":11,"stride":4,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (utilities['MaxPool2d'], {"kernel_size":3,"stride":2}),
+                                        (layers['LazyConv2d'], {'out_channels':256,"kernel_size":5,"stride":1,"padding":2,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (utilities['MaxPool2d'], {"kernel_size":3,"stride":2}),
+                                        (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':256,"kernel_size":3,"stride":1,"padding":1,"Initialization":"Xavier"}),(utilities['ReLU'], ),
+                                        (utilities['MaxPool2d'], {"kernel_size":3,"stride":2}),(utilities['Flatten'], ),
+                                        (layers['LazyLinear'], {'out_features':4096, "Initialization":"Xavier"}), (utilities['ReLU'], ),(utilities['Dropout'], {'p':0.5}),
+                                        (layers['LazyLinear'], {'out_features':84, "Initialization":"Xavier"}), (utilities['ReLU'], ),(utilities['Dropout'], {'p':0.5}),
                                         (layers['LazyLinear'], {'out_features':10, "Initialization":"Xavier"}),
                                     ),
                                     node_params={"node_editor":self.node_editor})
