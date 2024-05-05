@@ -1,26 +1,6 @@
 import dearpygui.dearpygui as dpg
 from config.settings import _source_theme
 
-class DragSource:
-
-    def __init__(self, label: str, node_generator, data=None, params: tuple[dict]=None, default_params: dict[str, str]= None, node_params=None):
-
-        self.label = label
-        self._generator = node_generator
-        self._data = data
-        self._params = params
-        self._default_params = default_params
-        self._node_params = node_params
-        
-
-    def submit(self, parent):
-        dpg.add_button(label=self.label, parent=parent, width=-1)
-        dpg.bind_item_theme(dpg.last_item(), _source_theme)
-        with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self, self._generator, self._data, self._params, self._default_params, self._node_params)):
-            dpg.add_text(f"Name: {self.label}")
-
-
-
 
 class DragSourceContainer:
 
@@ -32,7 +12,7 @@ class DragSourceContainer:
         self._uuid = dpg.generate_uuid()
         self._children: list[DragSource] = []  # drag sources
 
-    def add_drag_source(self, sources: tuple[DragSource]):
+    def add_drag_source(self, sources: tuple["DragSource"]):
         for source in sources:
             self._children.append(source)
 
@@ -43,4 +23,26 @@ class DragSourceContainer:
                 dpg.add_menu(label=self._label, enabled=False)
 
             for child in self._children:
-                child.submit(child_parent)
+                child._submit(child_parent)
+
+
+
+class DragSource:
+
+    def __init__(self, label: str, node_generator, data=None, params: tuple[dict]=None, default_params: dict[str, str]= None, node_params: dict=None):
+
+        self._label = label
+        self._generator = node_generator
+        self._data = data
+        self._params = params
+        self._default_params = default_params
+        self._node_params = node_params
+        
+
+    def _submit(self, parent: DragSourceContainer):
+        dpg.add_button(label=self._label, parent=parent, width=-1)
+        dpg.bind_item_theme(dpg.last_item(), _source_theme)
+        with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self._label, self._generator, self._data, self._params, self._default_params, self._node_params)):
+            dpg.add_text(f"Name: {self._label}")
+
+

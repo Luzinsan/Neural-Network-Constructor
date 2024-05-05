@@ -19,23 +19,23 @@ class ViewNode_2D(Node):
     def __init__(self, label: str, data=None, params:tuple[dict]=None, default_params: dict[str,str]=None, **node_params):
         super().__init__(label, data, **node_params)
 
-        self.add_input_attribute(InputNodeAttribute("full dataset", self))
-        self.add_params(params)
+        self._add_input_attribute(InputNodeAttribute("full dataset", self))
+        self._add_params(params)
 
-        self.x_axis = dpg.generate_uuid()
-        self.y_axis = dpg.generate_uuid()
-        self.plot = dpg.generate_uuid()
+        self.__x_axis_uuid = dpg.generate_uuid()
+        self.__y_axis_uuid = dpg.generate_uuid()
+        self.__plot_uuid = dpg.generate_uuid()
         
 
-    def custom(self):
+    def _custom(self):
 
-        with dpg.plot(height=400, width=400, no_title=True, tag=self.plot):
-            dpg.add_plot_axis(dpg.mvXAxis, label="epoch", tag=self.x_axis)
-            dpg.add_plot_axis(dpg.mvYAxis, label="estimates", tag=self.y_axis)
+        with dpg.plot(height=400, width=400, no_title=True, tag=self.__plot_uuid):
+            dpg.add_plot_axis(dpg.mvXAxis, label="epoch", tag=self.__x_axis_uuid)
+            dpg.add_plot_axis(dpg.mvYAxis, label="estimates", tag=self.__y_axis_uuid)
             dpg.add_plot_legend()
 
     def end(self, max_steps):
-        dpg.set_axis_limits(self.x_axis, 0, max_steps)
+        dpg.set_axis_limits(self.__x_axis_uuid, 0, max_steps)
         # dpg.set_axis_limits(self.y_axis, -0.1, 1)
 
     
@@ -45,13 +45,13 @@ class ViewNode_2D(Node):
                  fig=None, axes=None, figsize=(3.5, 2.5)):
         Point = collections.namedtuple('Point', ['x', 'y'])
         if not hasattr(self, 'raw_points'):
-            self.raw_points = collections.OrderedDict()
-            self.data = collections.OrderedDict()
-        if label not in self.raw_points:
-            self.raw_points[label] = []
-            self.data[label] = []
-        points = self.raw_points[label]
-        line = self.data[label]
+            self.__raw_points = collections.OrderedDict()
+            self.__data = collections.OrderedDict()
+        if label not in self.__raw_points:
+            self.__raw_points[label] = []
+            self.__data[label] = []
+        points = self.__raw_points[label]
+        line = self.__data[label]
         points.append(Point(x, y))
         if len(points) != every_n:
             return
@@ -62,7 +62,7 @@ class ViewNode_2D(Node):
         
         use_svg_display()
         plt_lines, labels = [], []
-        for (k, v), ls, color in zip(self.data.items(), ls, colors):
+        for (k, v), ls, color in zip(self.__data.items(), ls, colors):
             plt_lines.append(plt.plot([p.x for p in v], [p.y for p in v],
                                           linestyle=ls, color=color)[0])
             labels.append(k)
@@ -71,13 +71,13 @@ class ViewNode_2D(Node):
     def execute(self, metrics: dict, x, every_n=1):
         for label, y in metrics.items():
             (plt_lines, labels) = self.draw(x, y, label)
-            dpg.delete_item(self.y_axis, children_only=True)
+            dpg.delete_item(self.__y_axis_uuid, children_only=True)
             for idx, line in enumerate(plt_lines):
                 x_orig_data, y_orig_data = line.get_xdata(), line.get_ydata()
-                dpg.add_line_series(x_orig_data, y_orig_data, parent=self.y_axis, label=labels[idx])
+                dpg.add_line_series(x_orig_data, y_orig_data, parent=self.__y_axis_uuid, label=labels[idx])
         
-        dpg.fit_axis_data(self.x_axis)
-        dpg.fit_axis_data(self.y_axis)
-        self.finish()
+        dpg.fit_axis_data(self.__x_axis_uuid)
+        dpg.fit_axis_data(self.__y_axis_uuid)
+        self._finish()
 
 

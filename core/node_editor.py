@@ -15,12 +15,12 @@ class NodeEditor:
         self._nodes.append(node)
 
     def on_drop(self, sender, app_data, node_params):
-        source, generator, data, params, default_params, node_params = app_data
+        label, generator, data, params, default_params, node_params = app_data
         if node_params:
-            node: Node = generator(source.label, data, params, default_params, **node_params)
+            node: Node = generator(label, data, params, default_params, **node_params)
         else:
-            node: Node = generator(source.label, data, params, default_params)
-        node.submit(self.uuid)
+            node: Node = generator(label, data, params, default_params)
+        node._submit(self.uuid)
         self.add_node(node)
         return node
 
@@ -37,4 +37,4 @@ class NodeEditor:
                                  delink_callback=LinkNode._delink_callback,
                                  tag=self.uuid, width=-1, height=-1):
                 for node in self._nodes:
-                    node.submit(self.uuid)
+                    node._submit(self.uuid)

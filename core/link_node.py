@@ -1,16 +1,16 @@
 import dearpygui.dearpygui as dpg
 from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
+from typing import Union
 
 
 class LinkNode:
 
-    def __init__(self, input_uuid=None, output_uuid=None, parent=None):
+    def __init__(self, input_uuid:InputNodeAttribute, output_uuid:OutputNodeAttribute, parent:Union[str,int]):
 
         self.uuid = dpg.generate_uuid()
         self._input_attr = input_uuid
         self._output_attr = output_uuid
-        self._parent = parent
 
     def get_attrs(self):
         return self._input_attr, self._output_attr

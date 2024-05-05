@@ -12,5 +12,6 @@ def set_path(sender, app_data):
 
 with dpg.file_dialog(directory_selector=False, show=False, callback=set_path, tag="file_dialog",
                      width=700, height=400, modal=True):
-    # dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Calc]")
+    dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Calc]")
+    dpg.add_file_extension(".csv", color=(0, 255, 0, 255), custom_text="[CSV]")
     dpg.add_file_extension(".params", color=(0, 255, 0, 255), custom_text="[Params]")
