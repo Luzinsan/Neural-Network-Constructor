@@ -14,7 +14,7 @@ from app.lightning_data import DataModule
 
 class Pipeline:
 
-    debug = False
+    debug = True
     accept_init = [nn.Linear, nn.Conv2d]
 
     @staticmethod
@@ -25,7 +25,7 @@ class Pipeline:
                 print("Инициализация пайплайна") if Pipeline.debug else None
                 self = Pipeline(data_node)
                 print("Сбор слоёв") if Pipeline.debug else None
-                self.collect_layers(model_init._data)
+                self.collect_layers(model_init.get_node())
                 print("Тренировка: ", fake) if Pipeline.debug else None
                 self.train(fake)
             return self
@@ -136,7 +136,7 @@ class Pipeline:
         self.pipeline.append(Pipeline.init_layer(node))
         
         while len(node := node._output_attributes[0]._children):
-            node: Node = node[0]._data
+            node: Node = node[0].get_node()
             self.pipeline.append(Pipeline.init_layer(node))
 
         self.max_epochs = self.train_params.pop('Max Epoches')

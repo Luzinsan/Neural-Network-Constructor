@@ -10,8 +10,8 @@ class Node:
 
     def __init__(self, label: str, data=None, **node_params):
 
+        self.__uuid: Union[int, str] = dpg.generate_uuid()
         self._label: str = label
-        self._uuid: Union[int, str] = dpg.generate_uuid()
         self._input_attributes: list[InputNodeAttribute] = []
         self._output_attributes: list[OutputNodeAttribute] = []
         self._params: list[ParamNode] = []
@@ -19,7 +19,7 @@ class Node:
         self._node_params = node_params
 
     def _finish(self):
-        dpg.bind_item_theme(self._uuid, _completion_theme)
+        dpg.bind_item_theme(self.__uuid, _completion_theme)
 
     def _add_input_attribute(self, attribute: InputNodeAttribute):
         self._input_attributes.append(attribute)
@@ -31,28 +31,16 @@ class Node:
         if params:
             self._params += [ParamNode(**param) for param in params] 
 
-    def _custom(self):
-        pass
-        
-    def execute(self):
-        for attribute in self._output_attributes:
-            attribute.execute(self._data)
-        
-
 
     def _submit(self, parent):
-        with dpg.node(**self._node_params, parent=parent, label=self._label, tag=self._uuid, user_data=self):
+        with dpg.node(**self._node_params, parent=parent, label=self._label, tag=self.__uuid, user_data=self):
 
             for attribute in self._input_attributes:
-                attribute._submit(self._uuid)
+                attribute._submit(self.__uuid)
 
             for attribute in self._params:
-                attribute._submit(self._uuid)
+                attribute._submit(self.__uuid)
             
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static,
-                                    user_data=self):
-                self._custom()
-
             for attribute in self._output_attributes:
-                attribute._submit(self._uuid)
+                attribute._submit(self.__uuid)
         self._finish()

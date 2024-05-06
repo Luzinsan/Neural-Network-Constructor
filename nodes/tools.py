@@ -68,7 +68,7 @@ class ViewNode_2D(Node):
             labels.append(k)
         return (plt_lines, labels)
 
-    def execute(self, metrics: dict, x, every_n=1):
+    def _execute(self, metrics: dict, x, every_n=1):
         for label, y in metrics.items():
             (plt_lines, labels) = self.draw(x, y, label)
             dpg.delete_item(self.__y_axis_uuid, children_only=True)

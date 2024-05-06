@@ -6,21 +6,16 @@ class OutputNodeAttribute:
 
         self._uuid = dpg.generate_uuid()
         self._label = label
-        self._children: list["core.InputNodeAttribute"] = []  # output attributes
-        self._data = None
+        self._children: list["core.InputNodeAttribute"] = []  # input attributes
 
-    def add_child(self, parent, child: "core.InputNodeAttribute"):
+    def add_child(self, child: "core.InputNodeAttribute"):
         child.set_linked_attr(self)
         self._children.append(child)
 
-    def remove_child(self, parent, child: "core.InputNodeAttribute"):
+    def remove_child(self, child: "core.InputNodeAttribute"):
         self._children.remove(child)
         child.reset_linked_attr()
 
-    def execute(self, data):
-        self._data = data
-        for child in self._children:
-            child._data = self._data
 
     def _submit(self, parent):
 

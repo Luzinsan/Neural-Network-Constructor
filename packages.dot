@@ -1,0 +1,14 @@
+digraph "packages" {
+rankdir=BT
+charset="utf-8"
+"app" [color="black", label=<app>, shape="box", style="solid"];
+"app.lightning_data" [color="black", label=<app.lightning_data>, shape="box", style="solid"];
+"app.lightning_module" [color="black", label=<app.lightning_module>, shape="box", style="solid"];
+"app.main" [color="black", label=<app.main>, shape="box", style="solid"];
+"app.pipeline" [color="black", label=<app.pipeline>, shape="box", style="solid"];
+"app.trash" [color="black", label=<app.trash>, shape="box", style="solid"];
+"app.main" -> "app.pipeline" [arrowhead="open", arrowtail="none"];
+"app.main" -> "app.trash" [arrowhead="open", arrowtail="none"];
+"app.pipeline" -> "app.lightning_data" [arrowhead="open", arrowtail="none"];
+"app.pipeline" -> "app.lightning_module" [arrowhead="open", arrowtail="none"];
+}

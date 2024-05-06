@@ -8,12 +8,10 @@ class InputNodeAttribute:
         self._uuid = dpg.generate_uuid()
         self._linked_out_attr: OutputNodeAttribute|None = None
         self._label = label
-        self._data: "core.Node" = data
-        
 
 
-    def get_data(self):
-        return self._data
+    def get_node(self) -> "core.Node":
+        return dpg.get_item_user_data(dpg.get_item_parent(self._uuid))
 
     def set_linked_attr(self, out_attr: OutputNodeAttribute):
         self._linked_out_attr = out_attr

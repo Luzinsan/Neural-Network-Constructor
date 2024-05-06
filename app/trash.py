@@ -20,7 +20,7 @@ class ProgressBoard(TQDMProgressBar):
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         super().on_train_batch_end(trainer, pl_module, outputs, batch, batch_idx) 
         self.x += 1
-        self.widget.execute(metrics=self.get_metrics(trainer, pl_module), 
+        self.widget._execute(metrics=self.get_metrics(trainer, pl_module), 
                             x=self.x)
         
 

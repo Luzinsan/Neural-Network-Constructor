@@ -8,11 +8,12 @@ class NodeEditor:
     
     def __init__(self):
 
-        self._nodes: list[Node] = []
-        self.uuid = dpg.generate_uuid()
+        self._uuid = dpg.generate_uuid()
+        self.__nodes: list[Node] = []
+        
 
     def add_node(self, node: Node):
-        self._nodes.append(node)
+        self.__nodes.append(node)
 
     def on_drop(self, sender, app_data, node_params):
         label, generator, data, params, default_params, node_params = app_data
@@ -20,13 +21,13 @@ class NodeEditor:
             node: Node = generator(label, data, params, default_params, **node_params)
         else:
             node: Node = generator(label, data, params, default_params)
-        node._submit(self.uuid)
+        node._submit(self._uuid)
         self.add_node(node)
         return node
 
     def clear(self):
-        dpg.delete_item(self.uuid, children_only=True)
-        self._nodes.clear()
+        dpg.delete_item(self._uuid, children_only=True)
+        self.__nodes.clear()
 
 
     def submit(self, parent):
@@ -35,6 +36,6 @@ class NodeEditor:
                               drop_callback=lambda s, a, u: dpg.get_item_user_data(s).on_drop(s, a, u)):
             with dpg.node_editor(callback=LinkNode._link_callback,
                                  delink_callback=LinkNode._delink_callback,
-                                 tag=self.uuid, width=-1, height=-1):
-                for node in self._nodes:
-                    node._submit(self.uuid)
+                                 tag=self._uuid, width=-1, height=-1):
+                for node in self.__nodes:
+                    node._submit(self._uuid)

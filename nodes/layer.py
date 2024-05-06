@@ -79,5 +79,5 @@ class ModuleNode:
         for inx in range(len(self.nodes) - 1):
             first = self.nodes[inx]._output_attributes[0]
             sec = self.nodes[inx + 1]._input_attributes[0]
-            LinkNode._link_callback(self.node_editor.uuid, (first._uuid, sec._uuid))
+            LinkNode._link_callback(self.node_editor._uuid, (first._uuid, sec._uuid))
 
