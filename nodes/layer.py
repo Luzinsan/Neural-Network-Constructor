@@ -6,6 +6,9 @@ from core.link_node import LinkNode
 from core.dragndrop import DragSource
 import dearpygui.dearpygui as dpg
 from typing import Optional
+from copy import deepcopy
+import pdb
+
 
 class LayerNode(Node):
 
@@ -35,25 +38,24 @@ class ModuleNode:
         self.nodes: list[Node] = []
 
     @staticmethod
-    def replace_default_params(source: tuple[tuple[object, dict]], defaults: dict):
+    def replace_default_params(sequential: tuple[tuple[object, dict]], new_defaults: dict):
         idx = 0
-        for item in source:
-            replacement = None
-            if len(item) > 1:
-                params = item[1]
-                for key in params.keys():
-                    if replacement := defaults.get(key):
-                        params[key] = replacement[idx]
-            if replacement:
-                idx += 1           
-                
-        return source
+        updated_sequential = deepcopy(sequential)
+        for i, layer_defaults in enumerate(updated_sequential):
+            if len(layer_defaults) > 1: # если указаны новые параметры по умолчанию для слоя
+                # params = item[1]
+                for key in layer_defaults[1].keys():
+                    if params := new_defaults.get(key):
+                        layer_defaults[1][key] = params[idx]
+                idx += 1
+                          
+        return updated_sequential
    
     def submit_module(self):
         for idx, node in enumerate(self.sequential):
             source: DragSource = node[0]
             if len(node)>1:
-                defaults = node[1]
+                defaults = node[1].copy()
                 if source._generator.__qualname__ == 'ModuleNode.factory':
                     source._data = ModuleNode.replace_default_params(source._data, defaults)
                     

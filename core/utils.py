@@ -1,4 +1,23 @@
 import dearpygui.dearpygui as dpg
+from torch import nn
+
+
+accepted_initializations = [nn.Linear, nn.Conv2d]
+
+def init_normal(module: nn.Module):
+    try:
+        if type(module) in accepted_initializations:
+            nn.init.normal_(module.weight, mean=0, std=0.01)
+            nn.init.zeros_(module.bias)
+    except: raise RuntimeError("Ошибка во время предварительной инициализации слоя нормальным распределением")
+
+
+def init_xavier(module: nn.Module):
+    try: 
+        if type(module) in accepted_initializations:
+            nn.init.xavier_uniform_(module.weight)
+    except: raise RuntimeError("Ошибка во время предварительной инициализации слоя распределением Ксавье")
+
 
 def select_path(sender, app_data, user_data):
     dpg.set_item_user_data('file_dialog', user_data)

@@ -1,6 +1,7 @@
 from lightning import LightningModule
 import torch
 from torch import nn
+import pdb
 
 
 reshape = lambda x, *args, **kwargs: x.reshape(*args, **kwargs)
@@ -12,27 +13,25 @@ float32 = torch.float32
 
 class Module(LightningModule):
     
+    debug=True
     accept_init = [nn.Linear, nn.Conv2d]
     
     def __init__(self, sequential, optimizer, lr, loss_func):
         super(Module, self).__init__()
-
         self.net = sequential
         self.optimizer = optimizer
         self.lr = lr
         self.loss_func = loss_func
+        print('\n\t\t\tНеинициализированная сеть: ', self.net) if Module.debug else None
+        
 
-    def apply_init(self, inputs, init=None):
-        self.forward(*inputs)
+    def apply_init(self, data_source, init):
+        inputs = [next(iter(data_source.train_dataloader()))[0]]
+    
         if init is not None:
             self.net.apply(init)
-
-    @staticmethod  
-    def init_cnn(module):
-        try: 
-            if type(module) in Module.accept_init: 
-                nn.init.xavier_uniform_(module.weight)
-        except: pass
+            self.forward(*inputs)
+            self.net.apply(init)
 
 
     def configure_optimizers(self):
@@ -89,6 +88,7 @@ class Module(LightningModule):
     #                        titles=[f"{pred}\n{truth}" for pred, truth in zip(Y_hat, ground_truth)])
     
     def layer_summary(self, X_shape):
+        print("Individual input shape:\t", *X_shape)
         X = torch.randn(*X_shape)
         for layer in self.net:
             X = layer(X)

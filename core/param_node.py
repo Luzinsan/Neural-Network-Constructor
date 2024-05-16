@@ -80,8 +80,10 @@ class ParamNode:
                     else: return {'transforms': None}
                 return {self._label: values}
             case 'int' | 'float' | 'text' | 'text/tuple':
-                value = dpg.get_value(self._uuid)
-                return {self._label: dpg.get_item_user_data(self._uuid)(list(map(int, value.split(", "))) if self._type=='text/tuple' else value) \
+                value = dpg.get_value(self._uuid) 
+                if self._type=='text/tuple':
+                    value = list(map(int, value.split(", ")))
+                return {self._label: dpg.get_item_user_data(self._uuid)(value) \
                                     if with_user_data \
                                     else value}
                        

@@ -8,6 +8,8 @@ from core.node import Node
 from core.output_node_attr import OutputNodeAttribute
 
 from core.link_node import LinkNode
+from core import utils
+
 from app.pipeline import Pipeline
 from nodes.train_params_node import TrainParamsNode
 from lightning import LightningDataModule
@@ -36,7 +38,7 @@ class DataNode(Node):
         super()._submit(parent)
         losses = {"MSE (squared L2)": nn.MSELoss, "Cross Entropy Loss": F.cross_entropy, "L1 Loss": nn.L1Loss}
         optimizers = {"SGD": torch.optim.SGD, "Adam":torch.optim.Adam, "Adadelta":torch.optim.Adadelta, "Adamax":torch.optim.Adamax}
-        
+        init_params = {'Default':None, 'Normal': utils.init_normal, 'Xavier': utils.init_xavier } 
 
 
         self.train_params: TrainParamsNode = TrainParamsNode('Train Params',
@@ -47,6 +49,10 @@ class DataNode(Node):
                                              "items":tuple(losses.keys()), "user_data":losses},
                                             {"label":"Optimizer", "type":'combo', "default_value":self._default_params['Optimizer'], "width":150,
                                              "items":tuple(optimizers.keys()), "user_data":optimizers},
+                                            
+                                            {"label":"Initialization", "type":'combo', "default_value":'Xavier', "width":150,
+                                             "items":tuple(init_params.keys()), "user_data":init_params},
+                                            
                                             {"label":"Learning Rate", "type":'float', "default_value":0.05, "width":150},
                                             {"label":"Max Epoches", "type":'int', "default_value":2, "width":150},
                                             {"label":"Save Weights", "type":"file", "callback":Pipeline.save_weight},
