@@ -12,7 +12,7 @@ class DataModule(LightningDataModule):
     
         for attr, value in params.items():
             setattr(self, attr, value)
-        if resize := re.search('(?<=Resize\(size=)(\[.*\])', transforms.extra_repr()):
+        if transforms and (resize := re.search('(?<=Resize\(size=)(\[.*\])', transforms.extra_repr())):
             self.shape = eval(resize[0])
         else: self.shape = self.train.data.shape[-2:]
         

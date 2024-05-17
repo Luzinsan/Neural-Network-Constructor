@@ -43,6 +43,7 @@ class ParamNode:
             case 'blank':
                 dpg.add_text(**self._params, default_value=self._label, tag=self._uuid, parent=parent)
             case 'bool':
+                if self._type == 'bool': self._type='blank'
                 with dpg.group(horizontal=True) as group:     
                     param = ParamNode(label=self._label, type=self._type, **self._params)
                     param.__submit_in_container(group)
@@ -89,7 +90,7 @@ class ParamNode:
                        
             case 'blank':
                 return {self._label: dpg.get_item_user_data(self._uuid)()} 
-            case 'bool':
+            case 'bool': # TODO: fix with with_user_data
                 return {self._label: dpg.get_item_user_data(self._uuid).get_value()\
                         if dpg.get_value(self._uuid) is True \
                         else None}

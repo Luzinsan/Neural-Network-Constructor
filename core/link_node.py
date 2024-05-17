@@ -36,5 +36,5 @@ class LinkNode:
         output_attr: OutputNodeAttribute = dpg.get_item_user_data(output_attr_uuid)
 
         output_attr.remove_child(input_attr)
-        dpg.delete_item(link.uuid)
+        dpg.delete_item(link_uuid)
         del link

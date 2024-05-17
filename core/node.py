@@ -4,6 +4,7 @@ from core.input_node_attr import InputNodeAttribute
 from core.param_node import ParamNode
 from config.settings import _completion_theme
 from typing import List, Any, Callable, Union, Tuple
+import pdb
 
 
 class Node:
@@ -31,10 +32,22 @@ class Node:
         if params:
             self._params += [ParamNode(**param) for param in params] 
 
+    def delinks(self):
+        for input in self._input_attributes:
+            out = input._linked_out_attr
+            out.remove_child(input)
+        for out in self._output_attributes:
+            (input.reset_linked_attr() for input in out._children)
+
+
+    def __del__(self):
+        self.delinks()
+        dpg.delete_item(self.__uuid)
+        del self
+        
 
     def _submit(self, parent):
         with dpg.node(**self._node_params, parent=parent, label=self._label, tag=self.__uuid, user_data=self):
-
             for attribute in self._input_attributes:
                 attribute._submit(self.__uuid)
 

@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from core.node import Node
 from core.link_node import LinkNode
-
+import pdb
 
 class NodeEditor:
 
@@ -28,6 +28,13 @@ class NodeEditor:
     def clear(self):
         dpg.delete_item(self._uuid, children_only=True)
         self.__nodes.clear()
+        
+    def delete_node(self, sender, app_data, user_data):
+        selected_nodes = dpg.get_selected_nodes(self._uuid)
+        for node_id in selected_nodes:
+            node: Node = dpg.get_item_user_data(node_id)
+            self.__nodes.remove(node)
+            node.__del__()
 
 
     def submit(self, parent):
@@ -39,3 +46,6 @@ class NodeEditor:
                                  tag=self._uuid, width=-1, height=-1):
                 for node in self.__nodes:
                     node._submit(self._uuid)
+                with dpg.handler_registry():
+                    dpg.add_key_press_handler(dpg.mvKey_Delete,
+                                            callback=lambda s, a, u: self.delete_node(s,a,u))
