@@ -1,14 +1,12 @@
 import dearpygui.dearpygui as dpg
+import torchvision.datasets as ds # type: ignore
+from torchvision.transforms import v2 # type: ignore
 
 from torch import nn
 import torch
-import torchvision.datasets as ds
-from torchvision.transforms import v2 
 
 import sys, os
 sys.path.insert(1, os.getcwd())
-
-
 
 from config.settings import *
 from core.node_editor import NodeEditor
@@ -16,8 +14,6 @@ from core.dragndrop import DragSource, DragSourceContainer
 
 from nodes.dataset import DataNode
 from nodes.layer import LayerNode, ModuleNode
-from nodes.tools import ViewNode_2D
-from app.pipeline import Pipeline
 from app.trash import CustomDataset
 
 
@@ -341,7 +337,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84}), (layers['ReLU'], ),
                                     (layers['LazyLinear'], {'out_features':10}),
                                 ),
-                                node_params={"node_editor":self.node_editor}),
+                                node_editor=self.node_editor),
             'VGG': DragSource("VGG", 
                                 ModuleNode.factory,
                                 (
@@ -363,7 +359,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),
                                     (layers['LazyLinear'], {'out_features':10,  }),
                                 ),
-                                node_params={"node_editor":self.node_editor}),
+                                node_editor=self.node_editor),
             'AlexNet': DragSource("AlexNet", 
                                 ModuleNode.factory,
                                 (
@@ -379,7 +375,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
                                     (layers['LazyLinear'], {'out_features':10,  }),
                                 ),
-                                node_params={"node_editor":self.node_editor}),
+                                node_editor=self.node_editor),
             'NiN': DragSource("NiN",
                                 ModuleNode.factory,
                                 (
@@ -387,7 +383,7 @@ class App:
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], ),
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], )
                                 ),
-                                node_params={"node_editor":self.node_editor}),
+                                node_editor=self.node_editor)
         }
         archs['NiN Net'] = DragSource("NiN Net",
                                 ModuleNode.factory,
@@ -400,19 +396,9 @@ class App:
                                     (archs['NiN'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
                                     (layers['AdaptiveAvgPool2d'], {'output_size':'1, 1'}),(layers['Flatten'],)
                                 ),
-                                node_params={"node_editor":self.node_editor})
-        
+                                node_editor=self.node_editor)
         self.archs_container = DragSourceContainer("Модули", 150, 0)
         self.archs_container.add_drag_source(archs.values())
-        #endregion
-        #region tools
-        # tools = {
-        #     "Progress Board":DragSource("Progress Board", 
-        #                                 ViewNode_2D.factory),
-        # }
-        # self.tool_container = DragSourceContainer("Tools", 150, 0)
-        # self.tool_container.add_drag_source(tools.values())
-        #endregion
         
         
 

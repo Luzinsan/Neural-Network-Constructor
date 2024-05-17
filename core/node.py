@@ -28,7 +28,7 @@ class Node:
     def _add_output_attribute(self, attribute: OutputNodeAttribute):
         self._output_attributes.append(attribute)
 
-    def _add_params(self, params: tuple[dict]):
+    def _add_params(self, params: list[dict[str, Any]]):
         if params:
             self._params += [ParamNode(**param) for param in params] 
 

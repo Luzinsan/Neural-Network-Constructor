@@ -1,18 +1,20 @@
+
+from __future__ import annotations
 import pdb
 
 import dearpygui.dearpygui as dpg
+import clearml # type: ignore
 
-
-from typing import Union, Optional, Any
+from typing import Optional, Any
 from torch import nn
 import torch
 from lightning import Trainer
-import clearml
 
 from core.node import Node
-from core.utils import init_xavier
 from app.lightning_module import Module
 from app.lightning_data import DataModule
+from nodes import dataset
+from nodes import train_params_node
 
 
 
@@ -21,7 +23,7 @@ class Pipeline:
     debug = True
 
     @staticmethod
-    def flow(sender=None, app_data=None, data_node: "nodes.DataNode"=None, fake=False):
+    def flow(sender=None, app_data=None, data_node: Optional[dataset.DataNode]=None, fake=False):
         assert data_node
         try:
             for model_init in data_node._output_attributes[0]._children:
@@ -36,7 +38,7 @@ class Pipeline:
             raise LookupError("Error in flow")
     
     @staticmethod
-    def keep_train(sender=None, app_data=None, data_node: "nodes.DataNode"=None):
+    def keep_train(sender, app_data, data_node: dataset.DataNode):
     
         if hasattr(data_node.train_params, "pipeline"):
             try:
@@ -50,7 +52,7 @@ class Pipeline:
         
         
 
-    def __init__(self, init_node: "nodes.DataNode"):
+    def __init__(self, init_node: dataset.DataNode):
         self.pipeline = [Pipeline.init_dataloader(init_node)]
         init_node.train_params.set_pipline(self)
         self.train_params = Pipeline.get_params(init_node.train_params)
@@ -102,12 +104,12 @@ class Pipeline:
             torch.save(self.net.state_dict(), filepath)
 
     @staticmethod
-    def load_weight(sender, app_data, train_params__file):
+    def load_weight(sender, app_data, train_params__file: tuple[train_params_node.TrainParamsNode, int]):
         train_params, filepath_uuid = train_params__file
+        
         self: Pipeline = train_params.pipeline
         if not self:
-            data_node = dpg.get_item_user_data(
-                            dpg.get_item_parent(train_params._input_attributes[0]._linked_out_attr._uuid))  
+            data_node = train_params.datanode
             self = Pipeline.flow(data_node=data_node, fake=True)
             
         filepath = dpg.get_value(filepath_uuid)
@@ -121,8 +123,8 @@ class Pipeline:
     def collect_layers(self, node: Node):
         self.pipeline.append(Pipeline.init_layer(node))
         
-        while len(node := node._output_attributes[0]._children):
-            node: Node = node[0].get_node()
+        while len(input_attrs := node._output_attributes[0]._children):
+            node = input_attrs[0].get_node()
             self.pipeline.append(Pipeline.init_layer(node))
         
         self.max_epochs = self.train_params.pop('Max Epoches')

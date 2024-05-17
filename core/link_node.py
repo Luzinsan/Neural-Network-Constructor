@@ -1,12 +1,11 @@
 import dearpygui.dearpygui as dpg
 from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
-from typing import Union
 
 
 class LinkNode:
 
-    def __init__(self, input_uuid:InputNodeAttribute, output_uuid:OutputNodeAttribute):
+    def __init__(self, input_uuid:int, output_uuid:int):
 
         self.uuid = dpg.generate_uuid()
         self._input_attr = input_uuid
@@ -16,7 +15,7 @@ class LinkNode:
         return self._input_attr, self._output_attr
 
     @staticmethod
-    def _link_callback(node_editor_uuid, in_out_uuids):
+    def _link_callback(node_editor_uuid: int, in_out_uuids: tuple[int, int]):
         output_attr_uuid, input_attr_uuid = in_out_uuids
 
         input_attr: InputNodeAttribute = dpg.get_item_user_data(input_attr_uuid)
@@ -28,7 +27,7 @@ class LinkNode:
 
 
     @staticmethod
-    def _delink_callback(node_editor_uuid, link_uuid):
+    def _delink_callback(node_editor_uuid: int, link_uuid: int):
         link: LinkNode = dpg.get_item_user_data(link_uuid)
         input_attr_uuid, output_attr_uuid = link.get_attrs()
 

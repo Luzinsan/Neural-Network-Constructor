@@ -1,4 +1,6 @@
+
 import dearpygui.dearpygui as dpg
+from core import input_node_attr
 
 class OutputNodeAttribute:
 
@@ -6,13 +8,13 @@ class OutputNodeAttribute:
 
         self._uuid = dpg.generate_uuid()
         self._label = label
-        self._children: list["core.InputNodeAttribute"] = []  # input attributes
+        self._children: list[input_node_attr.InputNodeAttribute] = []  # input attributes
 
-    def add_child(self, child: "core.InputNodeAttribute"):
+    def add_child(self, child: input_node_attr.InputNodeAttribute):
         child.set_linked_attr(self)
         self._children.append(child)
 
-    def remove_child(self, child: "core.InputNodeAttribute"):
+    def remove_child(self, child: input_node_attr.InputNodeAttribute):
         self._children.remove(child)
         child.reset_linked_attr()
 

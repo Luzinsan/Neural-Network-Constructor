@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from core.utils import select_path
-from torchvision.transforms import v2 
+from torchvision.transforms import v2 # type: ignore
 
 
 class ParamNode:

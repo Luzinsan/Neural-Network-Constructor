@@ -1,5 +1,7 @@
+from __future__ import annotations
 import dearpygui.dearpygui as dpg
 from config.settings import _source_theme
+from typing import Optional
 
 
 class DragSourceContainer:
@@ -10,9 +12,9 @@ class DragSourceContainer:
         self._width = width
         self._height = height
         self._uuid = dpg.generate_uuid()
-        self._children: list[DragSource] = []  # drag sources
+        self._children: list[DragSource] = []
 
-    def add_drag_source(self, sources: tuple["DragSource"]):
+    def add_drag_source(self, sources: tuple[DragSource]):
         for source in sources:
             self._children.append(source)
 
@@ -29,7 +31,8 @@ class DragSourceContainer:
 
 class DragSource:
 
-    def __init__(self, label: str, node_generator, data=None, params: tuple[dict]=None, default_params: dict[str, str]= None, node_params: dict=None):
+    def __init__(self, label: str, node_generator, data, 
+                 params: Optional[tuple[dict]]=None, default_params: Optional[dict[str, str]]=None, **node_params):
 
         self._label = label
         self._generator = node_generator

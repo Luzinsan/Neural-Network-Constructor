@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Optional
 from torch import nn
 import torch.optim
@@ -8,6 +10,7 @@ from core.input_node_attr import InputNodeAttribute
 from core import utils
 
 from app.pipeline import Pipeline
+from nodes import dataset
 
 
 
@@ -33,7 +36,7 @@ class TrainParamsNode(Node):
 
 
     @staticmethod
-    def factory(name, data_node, default_params: Optional[dict[str, str]]=None, **node_params):
+    def factory(name, data_node: dataset.DataNode, default_params: Optional[dict[str, str]]=None, **node_params):
         node = TrainParamsNode(name, data_node, default_params, **node_params)
         return node
 
@@ -47,7 +50,7 @@ class TrainParamsNode(Node):
         def get_default(value):
             return default_params.get(value, list(TrainParamsNode.__params[value].keys())[0])
         
-        train_params: tuple[dict[str, object]] = (
+        train_params: list[dict[str, object]] = [
             {"label":"Project name", "type":'text', "default_value":default_params.get('Project name','Project'), "width":TrainParamsNode.WIDTH},
             {"label":"Task name", "type":'text', "default_value":default_params.get('Task name', 'Experiment'), "width":TrainParamsNode.WIDTH},
             {
@@ -68,11 +71,14 @@ class TrainParamsNode(Node):
             {"label":"Load Weights", "type":"file", "callback":Pipeline.load_weight},
             {"label":"Train", "type":"button", "callback":Pipeline.flow, "user_data":data_node},
             {"label":"Continue Train", "type":"button", "callback":Pipeline.keep_train, "user_data":data_node},
-        )
+        ]
         self._add_params(train_params)
     
     
     
-    def set_pipline(self, pipeline):
+    def set_pipline(self, pipeline: Pipeline):
         self.pipeline = pipeline
+        
+    def set_datanode(self, datanode: dataset.DataNode):
+        self.datanode = datanode
 

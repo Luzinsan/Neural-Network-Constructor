@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from dearpygui_ext.themes import create_theme_imgui_light 
+from dearpygui_ext.themes import create_theme_imgui_light # type: ignore
 import dearpygui.demo as demo
 
 from environs import Env
