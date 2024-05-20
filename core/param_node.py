@@ -66,6 +66,20 @@ class ParamNode:
                     dpg.add_input_text(**self._params, width=150, no_spaces=True, tag=self._uuid)
                     dpg.add_button(label="Path", user_data=self._uuid, callback=select_path)
     
+    @staticmethod
+    def submit_config(name, params, defaults, parent):
+        source_params = None
+        if params:
+            for param in params:
+                if (label := param['label']) in defaults.keys():
+                    param['default_value'] = defaults[label]
+            source_params = [ParamNode(**param) for param in params]
+            with dpg.collapsing_header(parent=parent, label=name, default_open=True) as submodule:
+                for attribute in source_params:
+                    attribute._submit_in_container(submodule)
+        else:
+            dpg.add_input_text(parent=parent, default_value=name, readonly=True, enabled=False)   
+        return source_params
                     
     def get_value(self, with_user_data=False):
         match self._type:

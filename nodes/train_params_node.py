@@ -40,7 +40,7 @@ class TrainParamsNode(Node):
         node = TrainParamsNode(name, data_node, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data_node, default_params: Optional[dict[str, str]]=None, **node_params):
+    def __init__(self, label: str, data_node: dataset.DataNode, default_params: Optional[dict[str, str]]=None, **node_params):
         super().__init__(label, data_node, **node_params)
 
         self._add_input_attribute(InputNodeAttribute("train dataset", self))
@@ -51,8 +51,8 @@ class TrainParamsNode(Node):
             return default_params.get(value, list(TrainParamsNode.__params[value].keys())[0])
         
         train_params: list[dict[str, object]] = [
-            {"label":"Project name", "type":'text', "default_value":default_params.get('Project name','Project'), "width":TrainParamsNode.WIDTH},
-            {"label":"Task name", "type":'text', "default_value":default_params.get('Task name', 'Experiment'), "width":TrainParamsNode.WIDTH},
+            {"label":"Project name", "type":'text', "default_value":default_params.get('Project name','DLC'), "width":TrainParamsNode.WIDTH},
+            {"label":"Task name", "type":'text', "default_value":default_params.get('Task name', data_node._label), "width":TrainParamsNode.WIDTH},
             {
                 "label":"Loss", "type":'combo', "default_value":get_default('Loss'), 
                 "items":tuple(TrainParamsNode.__params['Loss'].keys()), "user_data":TrainParamsNode.__params['Loss'], "width":TrainParamsNode.WIDTH

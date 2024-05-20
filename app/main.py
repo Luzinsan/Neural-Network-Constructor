@@ -339,7 +339,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84}), (layers['ReLU'], ),
                                     (layers['LazyLinear'], {'out_features':10}),
                                 ),
-                                node_editor=self.node_editor),
+                                 ),
             'VGG': DragSource("VGG", 
                                 ModuleNode.factory,
                                 (
@@ -361,7 +361,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),
                                     (layers['LazyLinear'], {'out_features':10,  }),
                                 ),
-                                node_editor=self.node_editor),
+                                 ),
             'AlexNet': DragSource("AlexNet", 
                                 ModuleNode.factory,
                                 (
@@ -377,7 +377,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
                                     (layers['LazyLinear'], {'out_features':10,  }),
                                 ),
-                                node_editor=self.node_editor),
+                                 ),
             'NiN': DragSource("NiN",
                                 ModuleNode.factory,
                                 (
@@ -385,7 +385,7 @@ class App:
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], ),
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], )
                                 ),
-                                node_editor=self.node_editor)
+                                 )
         }
         archs['NiN Net'] = DragSource("NiN Net",
                                 ModuleNode.factory,
@@ -398,7 +398,7 @@ class App:
                                     (archs['NiN'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
                                     (layers['AdaptiveAvgPool2d'], {'output_size':'1, 1'}),(layers['Flatten'],)
                                 ),
-                                node_editor=self.node_editor)
+                                 )
         self.archs_container = DragSourceContainer("Модули", 150, 0)
         self.archs_container.add_drag_source(archs.values())
         

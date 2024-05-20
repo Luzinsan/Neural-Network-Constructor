@@ -28,17 +28,14 @@ class LayerNode(Node):
 class ModuleNode:
 
     @staticmethod
-    def factory(name, sequential: tuple[tuple[DragSource, dict]], params, default_params: dict[str,str]=None, **node_params):
-        node = ModuleNode(name, sequential, params, default_params, **node_params)
+    def factory(label, sequential: tuple[tuple[DragSource, dict]], params=None, default_params: dict[str,str]=None, **node_params):
+        node = ModuleNode(label, sequential, params, default_params, **node_params)
         return node
 
-    def __init__(self, name, sequential: tuple[tuple[DragSource, dict]], params, default_params: dict[str,str]=None, **node_params):
-        self.name = name
+    def __init__(self, label, sequential: tuple[tuple[DragSource, dict]], params=None, default_params: dict[str,str]=None, **node_params):
+        self.label = label
         self.sequential = sequential
-        self.node_editor: NodeEditor = node_params['node_editor']
         self.pos: dict[str, int] = node_params.get('pos', {"x":0, "y":0})
-        self.sources = []
-        self.source_params: list[ParamNode] = []
 
     @staticmethod
     def replace_default_params(sequential: tuple[tuple[object, dict]], new_defaults: dict):
@@ -53,65 +50,52 @@ class ModuleNode:
                 idx += 1
         return updated_sequential
    
+       
+   
     def submit_module(self, modal):
+        all_sources = []
+        all_params = []
         for idx, node in enumerate(self.sequential):
             source: DragSource = node[0]
-            source_params = None
             if len(node)>1:
                 defaults = node[1].copy()
                 if source._generator.__qualname__ == 'ModuleNode.factory':
                     source._data = ModuleNode.replace_default_params(source._data, defaults)
-                    with dpg.collapsing_header(parent=modal, label=source._label, default_open=True) as submodule:
-                        sources, self.pos, source_params = ModuleNode(source._label, source._data, None, None, 
-                                            node_editor=self.node_editor, pos={'x':0, "y":self.pos['y'] + 200}).submit_module(submodule)
-                        self.sources += sources
-                        self.source_params += source_params
+                    with dpg.collapsing_header(parent=modal, label=source._label, default_open=False) as submodule:
+                        sources, self.pos, source_params = ModuleNode(source._label, source._data,
+                                                                      pos={'x':0, "y":self.pos['y'] + 200}).submit_module(submodule)
+                    all_sources += sources
+                    all_params += source_params
                     continue
-                
-                if source._params:
-                    for param in source._params:
-                        if (label := param['label']) in defaults.keys():
-                            param['default_value'] = defaults[label]
-                
-                    source_params = [ParamNode(**param) for param in source._params]
-                    with dpg.collapsing_header(parent=modal, label=source._label, default_open=True) as submodule:
-                        for attribute in source_params:
-                            attribute._submit_in_container(submodule)
-                else:
-                    dpg.add_input_text(parent=modal, default_value=source._label, readonly=True, enabled=False)      
-            
-            self.source_params.append(source_params)
+            all_params.append(ParamNode.submit_config(source._label, source._params, defaults, modal))
             self.pos['x'] += 200
             params = {"pos":(self.pos['x'], self.pos['y'])}
 
-            source = source._label, source._generator, source._data, source._params, source._default_params, params
-            self.sources.append(deepcopy(source))
+            all_sources.append(
+                deepcopy((source._label, source._generator, source._data, source._params, source._default_params, params))
+                )
 
-        return self.sources, self.pos, self.source_params
+        return all_sources, self.pos, all_params
     
-    def _submit_in_editor(self, modal):
-        pdb.set_trace()
-        for idx, source in enumerate(self.sources):
-            if self.source_params[idx]:
-                for param, origin_param in zip(self.source_params[idx], source[3]):
-                    
+    def _submit_in_editor(self, all_sources, all_params, parent, modal):
+        for idx, source in enumerate(all_sources):
+            if all_params[idx]:
+                for param, origin_param in zip(all_params[idx], source[3]):
                     returned = param.get_value()
                     if returned and ((value := returned.get(origin_param['label'], None)) is not None):
                         origin_param['default_value'] = value      
-                    else:
-                        pdb.set_trace()
-
-        nodes = [self.node_editor.on_drop(None, source, None) for source in self.sources]
+        editor = dpg.get_item_user_data(dpg.get_item_parent(parent))
+        nodes = [editor.on_drop(None, source, None) for source in all_sources]
         for inx in range(len(nodes) - 1):
             first = nodes[inx]._output_attributes[0]
             sec = nodes[inx + 1]._input_attributes[0]
-            LinkNode._link_callback(self.node_editor._uuid, (first._uuid, sec._uuid))
+            LinkNode._link_callback(parent, (first._uuid, sec._uuid))
         dpg.configure_item(modal, show=False)
         
 
     def _submit(self, parent):
-        with dpg.window(modal=True, pos=(500,0), label=f'Конфигурирование модуля {self.name}') as modal:
-            self.sources, _, self.source_params = self.submit_module(modal)
-            dpg.add_button(label="Продолжить", callback=lambda:self._submit_in_editor(modal))
+        with dpg.window(modal=True, pos=(500,0), label=f'Конфигурирование модуля {self.label}', min_size=(300, 500)) as modal:
+            all_sources, _, all_params = self.submit_module(modal)
+            dpg.add_button(label="Продолжить", callback=lambda:self._submit_in_editor(all_sources, all_params, parent, modal))
         
 
