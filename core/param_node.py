@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from core.utils import select_path
 from torchvision.transforms import v2 # type: ignore
+from config.settings import Configs
 
 
 class ParamNode:
@@ -11,6 +12,7 @@ class ParamNode:
         self._label: str = label
         self._type: str = type
         self._params = params
+        self._params.update({'width': Configs.width()})
 
     def info(self):
         return (self._uuid, self._container_uuid, self._label, self._type, self._params)
@@ -41,6 +43,7 @@ class ParamNode:
                             self.checkboxes_uuids.append(ParamNode(**item)\
                                 .__submit_in_container(self._uuid, 'bool'))     
             case 'blank':
+                self._params.pop('width', None)
                 dpg.add_text(**self._params, default_value=self._label, tag=self._uuid, parent=parent)
             case 'bool':
                 if self._type == 'bool': self._type='blank'
@@ -76,9 +79,9 @@ class ParamNode:
                           for checkbox_uuid 
                           in self.checkboxes_uuids 
                           if dpg.get_value(checkbox_uuid) is True]
-                if self._label == 'Transforms':
-                    if len(values): return {'transforms': v2.Compose([list(value.values())[0] for value in values])}
-                    else: return {'transforms': None}
+                if self._label == 'Transform':
+                    if len(values): return {'Transform': v2.Compose([list(value.values())[0] for value in values])}
+                    else: return {'Transform': None}
                 return {self._label: values}
             case 'int' | 'float' | 'text' | 'text/tuple':
                 value = dpg.get_value(self._uuid) 

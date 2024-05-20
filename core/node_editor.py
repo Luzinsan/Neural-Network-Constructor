@@ -39,7 +39,7 @@ class NodeEditor:
 
     def submit(self, parent):
         
-        with dpg.child_window(width=-160, parent=parent, user_data=self, 
+        with dpg.child_window(width=-160, height=-25, parent=parent, user_data=self, 
                               drop_callback=lambda s, a, u: dpg.get_item_user_data(s).on_drop(s, a, u)):
             with dpg.node_editor(callback=LinkNode._link_callback,
                                  delink_callback=LinkNode._delink_callback,

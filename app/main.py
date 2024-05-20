@@ -8,7 +8,9 @@ import torch
 import sys, os
 sys.path.insert(1, os.getcwd())
 
-from config.settings import *
+from config.setup import *
+from config.settings import Configs
+
 from core.node_editor import NodeEditor
 from core.dragndrop import DragSource, DragSourceContainer
 
@@ -24,11 +26,11 @@ class App:
 
         self.plugin_menu_id = dpg.generate_uuid()
         self.left_panel = dpg.generate_uuid()
+        self.center_panel = dpg.generate_uuid()
         self.right_panel = dpg.generate_uuid()
         self.node_editor = NodeEditor()
-        self.plugins = []
-        WIDTH = 150
-
+    
+        
         #region datasets
         self.dataset_container = DragSourceContainer("Датасеты", 150, -500)
         
@@ -51,14 +53,14 @@ class App:
             {"label":"RandomVerticalFlip", "type":'blank', "user_data": v2.RandomVerticalFlip},
             {"label":"RandomHorizontalFlip", "type":'blank', "user_data": v2.RandomHorizontalFlip}
                           ] 
-        transforms_setting = {"label":"Transforms", "type":'collaps', "width":WIDTH, "items":transforms}
-        transforms_setting_img = {"label":"Transforms", "type":'collaps', "width":WIDTH, "items":transforms_img}
+        transforms_setting = {"label":"Transform", "type":'collaps', "items":transforms}
+        transforms_setting_img = {"label":"Transform", "type":'collaps', "items":transforms_img}
         datasets = {
             "FashionMNIST": DragSource("FashionMNIST", 
                                         DataNode.factory, 
                                         ds.FashionMNIST,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -66,7 +68,7 @@ class App:
                                         DataNode.factory, 
                                         ds.Caltech101,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -74,7 +76,7 @@ class App:
                                         DataNode.factory, 
                                         ds.Caltech256,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -82,7 +84,7 @@ class App:
                                         DataNode.factory, 
                                         ds.CarlaStereo,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -90,7 +92,7 @@ class App:
                                         DataNode.factory, 
                                         ds.CelebA,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -98,7 +100,7 @@ class App:
                                         DataNode.factory, 
                                         ds.CIFAR10,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -106,7 +108,7 @@ class App:
                                         DataNode.factory, 
                                         ds.Cityscapes,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -114,7 +116,7 @@ class App:
                                         DataNode.factory, 
                                         ds.CLEVRClassification,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -122,7 +124,7 @@ class App:
                                         DataNode.factory, 
                                         ds.EMNIST,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -130,7 +132,7 @@ class App:
                                         DataNode.factory, 
                                         ds.CocoCaptions,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -138,7 +140,7 @@ class App:
                                         DataNode.factory, 
                                         ds.EuroSAT,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -146,7 +148,7 @@ class App:
                                         DataNode.factory, 
                                         ds.Flowers102,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -154,7 +156,7 @@ class App:
                                         DataNode.factory, 
                                         ds.Food101,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -162,7 +164,7 @@ class App:
                                         DataNode.factory, 
                                         ds.ImageNet,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -170,7 +172,7 @@ class App:
                                         DataNode.factory, 
                                         ds.SUN397,
                                         (
-                                            {"label":"batch_size", "type":'int', "step":2, "width":WIDTH, "min_value":2, "min_clamped":True, "default_value":64},
+                                            {"label":"batch_size", "type":'int', "step":2, "min_value":2, "min_clamped":True, "default_value":64},
                                             transforms_setting_img
                                         ),
                                         default_params={'Loss':'Cross Entropy Loss','Optimizer':'SGD'}),
@@ -178,7 +180,7 @@ class App:
                                         DataNode.factory, 
                                         CustomDataset,
                                         (
-                                            {"label":"val_size", "type":'float', "step":1, "width":WIDTH, "min_value":0.00000001, "min_clamped":True, 
+                                            {"label":"val_size", "type":'float', "step":1, "min_value":0.00000001, "min_clamped":True, 
                                              "max_value": 0.9999999, "max_clamped":True, "default_value":0.2},
                                             {"label":"Load Dataset", "type":"path", "default_value":"/home/luzinsan/Environments/petrol/data/"},
                                             transforms_setting_img
@@ -195,84 +197,84 @@ class App:
                                         LayerNode.factory, 
                                         nn.LazyLinear,
                                         (
-                                            {"label":"out_features", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":1},
+                                            {"label":"out_features", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":1},
                                         )),
             "LazyBatchNorm1d":   DragSource("LazyBatchNorm1d", 
                                         LayerNode.factory, 
                                         nn.LazyBatchNorm1d,
                                         (
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
             "LazyBatchNorm2d":   DragSource("LazyBatchNorm2d", 
                                         LayerNode.factory, 
                                         nn.LazyBatchNorm2d,
                                         (
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
             "LazyBatchNorm3d":   DragSource("LazyBatchNorm3d", 
                                         LayerNode.factory, 
                                         nn.LazyBatchNorm3d,
                                         (
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
             "LazyConv1d":   DragSource("LazyConv1d", 
                                         LayerNode.factory, 
                                         nn.LazyConv1d,
                                         (
-                                            {"label":"out_channels", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":5},
-                                            {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":1},
-                                            {"label":"padding", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"out_channels", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"kernel_size", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":5},
+                                            {"label":"stride", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":1},
+                                            {"label":"padding", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
             "LazyConv2d":   DragSource("LazyConv2d", 
                                         LayerNode.factory, 
                                         nn.LazyConv2d,
                                         (
-                                            {"label":"out_channels", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":5},
-                                            {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":1},
-                                            {"label":"padding", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"out_channels", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"kernel_size", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":5},
+                                            {"label":"stride", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":1},
+                                            {"label":"padding", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
             "LazyConv3d":   DragSource("LazyConv3d", 
                                         LayerNode.factory, 
                                         nn.LazyConv3d,
                                         (
-                                            {"label":"out_channels", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":5},
-                                            {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":1},
-                                            {"label":"padding", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"out_channels", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"kernel_size", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":5},
+                                            {"label":"stride", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":1},
+                                            {"label":"padding", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
             "BatchNorm1d":   DragSource("BatchNorm1d", 
                                         LayerNode.factory, 
                                         nn.BatchNorm1d,
                                         (
-                                            {"label":"num_features", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"num_features", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
             "BatchNorm2d":   DragSource("BatchNorm2d", 
                                         LayerNode.factory, 
                                         nn.BatchNorm2d,
                                         (
-                                            {"label":"num_features", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"num_features", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
             "BatchNorm3d":   DragSource("BatchNorm3d", 
                                         LayerNode.factory, 
                                         nn.BatchNorm3d,
                                         (
-                                            {"label":"num_features", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":6},
-                                            {"label":"eps", "type":'float', "step":0.00001, "width":WIDTH, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
-                                            {"label":"momentum", "type":'float', "step":0.001, "width":WIDTH, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
+                                            {"label":"num_features", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":6},
+                                            {"label":"eps", "type":'float', "step":0.00001, "min_value":0.00001, "min_clamped":True, "default_value":0.00001},
+                                            {"label":"momentum", "type":'float', "step":0.001, "min_value":0.000001, "min_clamped":True, "default_value":0.01},
                                             {"label":"affine", "type":'bool'},
                                         )),
         
@@ -283,27 +285,27 @@ class App:
                                         LayerNode.factory,
                                         nn.AvgPool2d,
                                         (
-                                            {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
-                                            {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"kernel_size", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"stride", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
             "MaxPool2d":      DragSource("MaxPool2d",
                                         LayerNode.factory,
                                         nn.MaxPool2d,
                                         (
-                                            {"label":"kernel_size", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
-                                            {"label":"stride", "type":'int', "step":1, "width":WIDTH, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"kernel_size", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
+                                            {"label":"stride", "type":'int', "step":1, "min_value":1, "min_clamped":True, "default_value":2},
                                         )),
             "AdaptiveAvgPool2d":DragSource("AdaptiveAvgPool2d",
                                         LayerNode.factory,
                                         nn.AdaptiveAvgPool2d,
                                         (
-                                            {"label":"output_size", "type":'text/tuple', "width":WIDTH, "default_value":'1, 2'},
+                                            {"label":"output_size", "type":'text/tuple', "default_value":'1, 2'},
                                         )),
             "Dropout":      DragSource("Dropout",
                                         LayerNode.factory,
                                         nn.Dropout,
                                         (
-                                            {"label":"p", "type":'float', "width":WIDTH, "default_value":0.5},
+                                            {"label":"p", "type":'float', "default_value":0.5},
                                         )),
             "ReLU":         DragSource("ReLU",
                                         LayerNode.factory,
@@ -412,51 +414,58 @@ class App:
 
             dpg.delete_item(self.right_panel, children_only=True)
             self.archs_container.submit(self.right_panel)
-            # self.tool_container.submit(self.right_panel)
 
-
-    def add_plugin(self, name, callback):
-        self.plugins.append((name, callback))
                 
 
-   
-
     def start(self):
-        #dpg.setup_registries()
         dpg.set_viewport_title("Deep Learning Constructor")
         dpg.show_viewport()
-
+        try:
+            with dpg.item_handler_registry(tag="hover_handler"):
+                dpg.add_item_hover_handler(callback=lambda s, a, u: dpg.configure_item('hover_logger', 
+                                        default_value=f"Текущий элемент: {dpg.get_item_label(a)}"))        
+        except SystemError as err: print("Удаление узла")
+            
         with dpg.window() as main_window:
 
             with dpg.menu_bar():
-                with dpg.menu(label="Операции"):
+                with dpg.menu(label="Файл"):
                     dpg.add_menu_item(label="Сбросить", callback=self.node_editor.clear)
 
-                with dpg.menu(label="Плагины"):
-                    for plugin in self.plugins:
-                        dpg.add_menu_item(label=plugin[0], callback=plugin[1])
+                with dpg.menu(label="Настройки"):
+                    dpg.add_menu_item(label="Логирование", check=True, callback=lambda s,check_value,u:Configs.set_logger)
+                    with dpg.menu(label="Инструменты"):
+                        dpg.add_menu_item(label="Show Metrics", callback=lambda:dpg.show_tool(dpg.mvTool_Metrics))
+                        dpg.add_menu_item(label="Show Documentation", callback=lambda:dpg.show_tool(dpg.mvTool_Doc))
+                        dpg.add_menu_item(label="Show Debug", callback=lambda:dpg.show_tool(dpg.mvTool_Debug))
+                        dpg.add_menu_item(label="Show Style Editor", callback=lambda:dpg.show_tool(dpg.mvTool_Style))
+                        dpg.add_menu_item(label="Show Font Manager", callback=lambda:dpg.show_tool(dpg.mvTool_Font))
+                        dpg.add_menu_item(label="Show Item Registry", callback=lambda:dpg.show_tool(dpg.mvTool_ItemRegistry))
+                        dpg.add_menu_item(label="Show About", callback=lambda:dpg.show_tool(dpg.mvTool_About))
+                
+                with dpg.menu(tag='menu_message_logger', label='---Сообщения---'):
+                    dpg.add_child_window(tag='message_logger', height=200, delay_search=True, width=1600)
 
-            with dpg.group(horizontal=True) as group:
+            with dpg.group(tag='panel', horizontal=True):
                 # left panel
-                with dpg.group(id=self.left_panel):
+                with dpg.group(tag=self.left_panel):
                     self.dataset_container.submit(self.left_panel)
                     self.layer_container.submit(self.left_panel)
 
                 # center panel
-                self.node_editor.submit(group)
+                with dpg.group(tag=self.center_panel):
+                    self.node_editor.submit(self.center_panel)
+                    dpg.add_text(tag='hover_logger', default_value="Текущий элемент: ", 
+                                 parent=self.center_panel)
 
                 # right panel
-                with dpg.group(id=self.right_panel):
+                with dpg.group(tag=self.right_panel):
                     self.archs_container.submit(self.right_panel)
-                    # self.tool_container.submit(self.right_panel)
                     
         
         dpg.set_primary_window(main_window, True)
         dpg.start_dearpygui()
         
-
-
-
 
 app = App()
 app.start()

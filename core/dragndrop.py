@@ -44,6 +44,7 @@ class DragSource:
 
     def _submit(self, parent: DragSourceContainer):
         dpg.add_button(label=self._label, parent=parent, width=-1)
+        dpg.bind_item_handler_registry(dpg.last_item(), "hover_handler")
         dpg.bind_item_theme(dpg.last_item(), _source_theme)
         with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self._label, self._generator, self._data, self._params, self._default_params, self._node_params)):
             dpg.add_text(f"Name: {self._label}")

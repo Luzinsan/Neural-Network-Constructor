@@ -69,8 +69,9 @@ class TrainParamsNode(Node):
             {"label":"Max Epoches", "type":'int', "default_value":default_params.get('Max Epoches', 2), "width":TrainParamsNode.WIDTH},
             {"label":"Save Weights", "type":"file", "callback":Pipeline.save_weight},
             {"label":"Load Weights", "type":"file", "callback":Pipeline.load_weight},
-            {"label":"Train", "type":"button", "callback":Pipeline.flow, "user_data":data_node},
             {"label":"Continue Train", "type":"button", "callback":Pipeline.keep_train, "user_data":data_node},
+            {"label":"Terminate", "type":"button", "callback":Pipeline.terminate, "user_data":data_node},
+            {"label":"Train", "type":"button", "callback":Pipeline.flow, "user_data":data_node},
         ]
         self._add_params(train_params)
     

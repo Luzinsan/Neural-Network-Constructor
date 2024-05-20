@@ -2,6 +2,7 @@ from lightning import LightningModule
 import torch
 from torch import nn
 import pdb
+from core.utils import send_message
 
 
 reshape = lambda x, *args, **kwargs: x.reshape(*args, **kwargs)
@@ -40,7 +41,7 @@ class Module(LightningModule):
     
     def forward(self, X):
         return self.net(X)
-    
+        
 
     def accuracy(self, Y_hat, Y, averaged=True):
         Y_hat = reshape(Y_hat, (-1, Y_hat.shape[-1]))
@@ -70,12 +71,6 @@ class Module(LightningModule):
         return self.metric(batch, 'train')
 
     def validation_step(self, batch):
-        # if self.global_step%100==0:
-        #     # log 6 example images
-        #     x, y = batch
-        #     sample_imgs, truth_labels = x[:8], y[:8]
-        #     axes = self.visualize(sample_imgs, truth_labels)
-        #     self.logger.experiment.add_figure('example_images: predicted/ground_truth', axes)
         return self.metric(batch, 'val')
     
     

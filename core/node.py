@@ -1,13 +1,17 @@
+from __future__ import annotations
 import dearpygui.dearpygui as dpg
 from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
 from core.param_node import ParamNode
+from app import lightning_data
 from config.settings import _completion_theme
-from typing import List, Any, Callable, Union, Tuple
+from typing import Any, Union
 import pdb
 
 
 class Node:
+
+    debug=True
 
     def __init__(self, label: str, data=None, **node_params):
 
@@ -32,16 +36,15 @@ class Node:
         if params:
             self._params += [ParamNode(**param) for param in params] 
 
-    def delinks(self):
+    def _delinks(self):
         for input in self._input_attributes:
             out = input._linked_out_attr
             out.remove_child(input)
         for out in self._output_attributes:
             (input.reset_linked_attr() for input in out._children)
 
-
     def __del__(self):
-        self.delinks()
+        self._delinks()
         dpg.delete_item(self.__uuid)
         del self
         
@@ -56,4 +59,29 @@ class Node:
             
             for attribute in self._output_attributes:
                 attribute._submit(self.__uuid)
+        dpg.bind_item_handler_registry(self.__uuid, "hover_handler")
         self._finish()
+        
+    def next(self, out_idx: int=0, node_idx: int=0) -> Union[Node, None]:
+        input_attrs: list[InputNodeAttribute] = self._output_attributes[out_idx]._children
+        return input_attrs[node_idx].get_node() if input_attrs else None
+        
+
+    def init_with_params(self, mode='simple') -> Any:
+        try: 
+            params = self.get_params()
+            print("\nСлой: ", self._data) if Node.debug else None
+            print("Параметры слоя: ", params) if Node.debug else None
+            match mode:
+                case 'simple': return self._data(**params)
+                case 'data': return lightning_data.DataModule(self._data, **params)
+        except: raise RuntimeError("Ошибка инициализации слоя")
+        
+        
+    def get_params(self) -> dict:
+        params = {}
+        for param in self._params:
+            returned = param.get_value()
+            params.update(returned) if returned else None
+        return params
+    
