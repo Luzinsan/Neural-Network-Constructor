@@ -15,33 +15,9 @@ from app.lightning_module import Module
 from app.lightning_data import DataModule
 from nodes import dataset
 from nodes import train_params_node
-from core.utils import send_message
+from core.utils import send_message, terminate_thread
 import webbrowser
-import multiprocessing
 import threading
-
-import ctypes
-
-def terminate_thread(thread: threading.Thread):
-    """Terminates a python thread from another thread.
-
-    :param thread: a threading.Thread instance
-    """
-    if not thread.is_alive():
-        raise ValueError("Обучение не запущено")
-
-    exc = ctypes.py_object(SystemExit)
-    if id := thread.ident:
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                            ctypes.c_long(id), exc)
-        if res == 0:
-            raise ValueError("nonexistent thread id")
-        elif res > 1:
-            # """if it returns a number greater than one, you're in trouble,
-            # and you should call it again with exc=NULL to revert the effect"""
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(id, None)
-            send_message("Обучение остановлено", 'warning')
-            raise KeyboardInterrupt("Обучение остановлено")
 
 
 class Pipeline:

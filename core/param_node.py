@@ -21,10 +21,10 @@ class ParamNode:
 
         with dpg.node_attribute(parent=node_uuid, user_data=self, attribute_type=dpg.mvNode_Attr_Static, 
                                 tag=self._container_uuid):
-            self.__submit_in_container(self._container_uuid)
+            self._submit_in_container(self._container_uuid)
           
             
-    def __submit_in_container(self, parent, inner_type=None):
+    def _submit_in_container(self, parent, inner_type=None):
         match_type = inner_type if inner_type else self._type
         match match_type:
             case 'int':
@@ -41,7 +41,7 @@ class ParamNode:
                     with dpg.collapsing_header(label=self._label, default_open=True, tag=self._uuid):
                         for item in self._params['items']:
                             self.checkboxes_uuids.append(ParamNode(**item)\
-                                .__submit_in_container(self._uuid, 'bool'))     
+                                ._submit_in_container(self._uuid, 'bool'))     
             case 'blank':
                 self._params.pop('width', None)
                 dpg.add_text(**self._params, default_value=self._label, tag=self._uuid, parent=parent)
@@ -49,7 +49,7 @@ class ParamNode:
                 if self._type == 'bool': self._type='blank'
                 with dpg.group(horizontal=True) as group:     
                     param = ParamNode(label=self._label, type=self._type, **self._params)
-                    param.__submit_in_container(group)
+                    param._submit_in_container(group)
                     return dpg.add_checkbox(default_value=False, 
                                             before=param._uuid,
                                             user_data=param,

@@ -38,12 +38,12 @@ class Node:
 
     def _delinks(self):
         for input in self._input_attributes:
-            out = input._linked_out_attr
-            out.remove_child(input)
+            if out := input._linked_out_attr:
+                out.remove_child(input)
         for out in self._output_attributes:
-            (input.reset_linked_attr() for input in out._children)
+            (input.reset_linked_attr() for input in out._children if input)
 
-    def __del__(self):
+    def _del(self):
         self._delinks()
         dpg.delete_item(self.__uuid)
         del self
