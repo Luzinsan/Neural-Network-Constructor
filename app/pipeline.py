@@ -105,7 +105,12 @@ class Pipeline:
         self.dataset = node.init_with_params('data')
         self.pipeline = []
         while next_node := node.next():
-            self.pipeline.append(next_node.init_with_params())
+            # pdb.set_trace()
+            if isinstance(next_node._data, list):
+                for module_node in next_node._data:
+                    self.pipeline.append(module_node.init_with_params())
+            else:
+                self.pipeline.append(next_node.init_with_params())
             node = next_node
         
     def train(self):

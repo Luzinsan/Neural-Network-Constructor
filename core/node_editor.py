@@ -22,10 +22,11 @@ class NodeEditor:
     def add_node(self, node: Node):
         self.__nodes.append(node)
 
-    def on_drop(self, sender: int, node, node_params: dict):
+    def on_drop(self, sender: int, node, node_params: dict, module=False):
         node = NodeEditor.factory(node, node_params)
-        node._submit(self._uuid)
-        self.add_node(node)
+        if not module: 
+            self.add_node(node)
+            node._submit(self._uuid)
         return node
 
     def clear(self):
@@ -36,9 +37,17 @@ class NodeEditor:
         selected_nodes = dpg.get_selected_nodes(self._uuid)
         for node_id in selected_nodes:
             node: Node = dpg.get_item_user_data(node_id)
-            self.__nodes.remove(node)
-            node._del()
+            self.delete_node(node)
+    
+    def delete_node(self, node: Node):
+        self.__nodes.remove(node)
+        node._del()
 
+    @staticmethod
+    def delete_in_editor(editor_uuid:int, node:Node):
+        editor: NodeEditor = dpg.get_item_user_data(dpg.get_item_parent(editor_uuid))
+        editor.delete_node(node)
+        return editor
 
     def submit(self, parent):
         

@@ -86,6 +86,7 @@ class ParamNode:
             case 'combo':
                 choices = dpg.get_item_user_data(self._uuid)
                 value = dpg.get_value(self._uuid)
+                value = value if value else self._params.get('default_value')
                 return {self._label: choices[value]}
                         
             case 'collaps':  
@@ -99,7 +100,8 @@ class ParamNode:
                 return {self._label: values}
             case 'int' | 'float' | 'text' | 'text/tuple':
                 value = dpg.get_value(self._uuid) 
-                if self._type=='text/tuple':
+                value = value if value else self._params.get('default_value')
+                if self._type=='text/tuple' and isinstance(value, str):
                     value = list(map(int, value.split(", ")))
                 return {self._label: dpg.get_item_user_data(self._uuid)(value) \
                                     if with_user_data \

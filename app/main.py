@@ -390,7 +390,6 @@ class App:
         archs['NiN Net'] = DragSource("NiN Net",
                                 ModuleNode.factory,
                                 (
-                                    (datasets['FashionMNIST'], {"batch_size": 128, "Resize": '224, 224'}),
                                     (archs['NiN'], {'out_channels':[96, 96, 96], 'kernel_size':[11,1,1], 'stride':[4, 1, 1],'padding':[0, 0, 0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
                                     (archs['NiN'], {'out_channels':[256, 256, 256], 'kernel_size':[5,1,1], 'stride':[1, 1, 1],'padding':[2,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
                                     (archs['NiN'], {'out_channels':[384, 384, 384], 'kernel_size':[3,1,1], 'stride':[1, 1, 1],'padding':[1,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
@@ -420,10 +419,16 @@ class App:
     def start(self):
         dpg.set_viewport_title("Deep Learning Constructor")
         dpg.show_viewport()
+        
+        def curent_item(uuid):
+            try:
+                message = f"Текущий элемент: {dpg.get_item_label(uuid)}"
+                dpg.configure_item('hover_logger', default_value=message)
+            except BaseException: pass
+            
         try:
             with dpg.item_handler_registry(tag="hover_handler"):
-                dpg.add_item_hover_handler(callback=lambda s, a, u: dpg.configure_item('hover_logger', 
-                                        default_value=f"Текущий элемент: {dpg.get_item_label(a)}"))        
+                dpg.add_item_hover_handler(callback=lambda s,a,u: curent_item(a))        
         except SystemError as err: print("Удаление узла")
             
         with dpg.window() as main_window:

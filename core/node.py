@@ -50,6 +50,7 @@ class Node:
         
 
     def _submit(self, parent):
+        self._node_editor_uuid = parent
         with dpg.node(**self._node_params, parent=parent, label=self._label, tag=self.__uuid, user_data=self):
             for attribute in self._input_attributes:
                 attribute._submit(self.__uuid)
@@ -59,6 +60,7 @@ class Node:
             
             for attribute in self._output_attributes:
                 attribute._submit(self.__uuid)
+           
         dpg.bind_item_handler_registry(self.__uuid, "hover_handler")
         self._finish()
         
