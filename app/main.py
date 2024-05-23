@@ -9,7 +9,7 @@ import sys, os
 sys.path.insert(1, os.getcwd())
 
 from config.setup import *
-from config.settings import Configs
+from config.settings import Configs, BaseGUI
 
 from core.node_editor import NodeEditor
 from core.dragndrop import DragSource, DragSourceContainer
@@ -38,7 +38,7 @@ class App:
                   'int32': v2.ToDtype(torch.int32), 
                   'int64': v2.ToDtype(torch.int64)} 
         
-        transforms = [{"label":"Resize", "type":'text/tuple', "default_value":"224, 224", "user_data": v2.Resize},
+        transforms = [{"label":"Resize", "type":'text/tuple', "default_value":"[224, 224]", "user_data": v2.Resize},
                       {"label":"ToImage", "type":'blank', "user_data": v2.ToImage},
                       {"label":"ToDtype", "type":'combo', "default_value":"float32",
                        "items":tuple(_dtypes.keys()), "user_data": _dtypes},
@@ -299,7 +299,7 @@ class App:
                                         LayerNode.factory,
                                         nn.AdaptiveAvgPool2d,
                                         (
-                                            {"label":"output_size", "type":'text/tuple', "default_value":'1, 2'},
+                                            {"label":"output_size", "type":'text/tuple', "default_value":'[1, 2]'},
                                         )),
             "Dropout":      DragSource("Dropout",
                                         LayerNode.factory,
@@ -395,7 +395,7 @@ class App:
                                     (archs['NiN'], {'out_channels':[384, 384, 384], 'kernel_size':[3,1,1], 'stride':[1, 1, 1],'padding':[1,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
                                     (layers['Dropout'], {'p':0.5}),
                                     (archs['NiN'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
-                                    (layers['AdaptiveAvgPool2d'], {'output_size':'1, 1'}),(layers['Flatten'],)
+                                    (layers['AdaptiveAvgPool2d'], {'output_size':'[1, 1]'}),(layers['Flatten'],)
                                 ),
                                  )
         self.archs_container = DragSourceContainer("Модули", 150, 0)
@@ -420,21 +420,13 @@ class App:
         dpg.set_viewport_title("Deep Learning Constructor")
         dpg.show_viewport()
         
-        def curent_item(uuid):
-            try:
-                message = f"Текущий элемент: {dpg.get_item_label(uuid)}"
-                dpg.configure_item('hover_logger', default_value=message)
-            except BaseException: pass
-            
-        try:
-            with dpg.item_handler_registry(tag="hover_handler"):
-                dpg.add_item_hover_handler(callback=lambda s,a,u: curent_item(a))        
-        except SystemError as err: print("Удаление узла")
             
         with dpg.window() as main_window:
 
             with dpg.menu_bar():
                 with dpg.menu(label="Файл"):
+                    dpg.add_menu_item(label="Открыть", callback=lambda:self.node_editor.callback_file(self.node_editor.open))
+                    dpg.add_menu_item(label="Сохранить", callback=lambda:self.node_editor.callback_file(self.node_editor.save))
                     dpg.add_menu_item(label="Сбросить", callback=self.node_editor.clear)
 
                 with dpg.menu(label="Настройки"):

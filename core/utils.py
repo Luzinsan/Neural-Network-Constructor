@@ -1,6 +1,7 @@
 from __future__ import annotations
 import dearpygui.dearpygui as dpg
 from torch import nn
+import datetime
 from typing import Optional
 import threading
 import ctypes
@@ -47,8 +48,6 @@ def terminate_thread(thread: threading.Thread):
 
 
 def send_message(message, type_message: str = 'error', brief:Optional[str]=None, callback=None): 
-    
-    
     dpg.set_item_label('menu_message_logger', f"Сообщения: {brief if brief else message}")
     logs: list = dpg.get_item_children('message_logger', 1)
     message = f"{brief}. Подробнее: {message}" if brief else message
@@ -91,3 +90,15 @@ with dpg.file_dialog(directory_selector=False, show=False, callback=set_path, ta
     dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Calc]")
     dpg.add_file_extension(".csv", color=(0, 255, 0, 255), custom_text="[CSV]")
     dpg.add_file_extension(".params", color=(0, 255, 0, 255), custom_text="[Params]")
+
+
+with dpg.file_dialog(
+        directory_selector=False,
+        show=False,
+        modal=True,
+        width=700, height=400, 
+        default_filename=datetime.datetime.now().strftime('%Y_%m_%d'),
+        tag='json_file',
+        ):
+    dpg.add_file_extension('.json')
+    dpg.add_file_extension('', color=(150, 255, 150, 255))

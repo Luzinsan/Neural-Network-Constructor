@@ -19,7 +19,7 @@ class ViewNode_2D(Node):
     def __init__(self, label: str, data=None, params:tuple[dict]=None, default_params: dict[str,str]=None, **node_params):
         super().__init__(label, data, **node_params)
 
-        self._add_input_attribute(InputNodeAttribute("full dataset", self))
+        self._add_input_attribute(InputNodeAttribute("full dataset"))
         self._add_params(params)
 
         self.__x_axis_uuid = dpg.generate_uuid()

@@ -29,9 +29,13 @@ class DataNode(Node):
     def _submit(self, parent:int):
         super()._submit(parent)
         
-        self.train_params: TrainParamsNode = TrainParamsNode('Train Params', data_node=self, 
-                                                             default_params=self._default_params, pos=(100, 250))
+        self.train_params: TrainParamsNode = TrainParamsNode('Train Params', 
+                                                             data_node=self, 
+                                                             default_params=self._default_params, 
+                                                             pos=(100, 250))
         self.train_params._submit(parent)
         self.train_params.set_datanode(self)
-        LinkNode._link_callback(parent, (self._output_attributes[2]._uuid, self.train_params._input_attributes[0]._uuid))
+        LinkNode._link_callback(parent, 
+                                (self._output_attributes[2].uuid, 
+                                 self.train_params._input_attributes[0].uuid))
 

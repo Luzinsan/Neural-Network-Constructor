@@ -43,7 +43,7 @@ class TrainParamsNode(Node):
     def __init__(self, label: str, data_node: dataset.DataNode, default_params: Optional[dict[str, str]]=None, **node_params):
         super().__init__(label, data_node, **node_params)
 
-        self._add_input_attribute(InputNodeAttribute("train dataset", self))
+        self._add_input_attribute(InputNodeAttribute("train dataset"))
         if not default_params: 
             default_params = {key:list(choices.keys())[0] for key, choices in TrainParamsNode.__params.items()}
         

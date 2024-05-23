@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 from dearpygui import demo
+from typing import Optional
 ########################################################################################################################
 # Settings
 ########################################################################################################################
@@ -7,6 +8,7 @@ class Configs:
     
     __width: int = 150
     __logger: bool = False
+    __max_uuid: int = 0
     
     @staticmethod
     def width() -> int:
@@ -17,6 +19,56 @@ class Configs:
     @staticmethod
     def set_logger(s, check_value, u):
         Configs.__logger = check_value
+    @staticmethod
+    def uuid():
+        return Configs.__max_uuid
+    @staticmethod
+    def set_uuid(new_uuid=None):
+        if new_uuid: 
+            Configs.__max_uuid = new_uuid
+        else:
+            new_uuid = dpg.generate_uuid()
+            if Configs.__max_uuid < new_uuid: 
+                Configs.__max_uuid = new_uuid
+            else: Configs.__max_uuid += 1
+        return Configs.__max_uuid
+    @staticmethod
+    def reset_uuid():
+        Configs.__max_uuid = 0
+        
+        
+class BaseGUI:
+    
+    __global_max_uuid = 0
+    __reserved_uuids: list[int] = []
+
+    def __init__(self, uuid:Optional[int]=0):
+        self._uuid = BaseGUI.generate_uuid(uuid)
+    
+    @property
+    def uuid(self):
+        return self._uuid
+    
+    @staticmethod
+    def generate_uuid(uuid: Optional[int]=None) -> int:
+        if uuid: 
+            if uuid in BaseGUI.__reserved_uuids:
+                uuid = BaseGUI._refresh_uuid(uuid)
+        else:
+            BaseGUI.__global_max_uuid = uuid = BaseGUI._refresh_uuid(dpg.generate_uuid())
+            
+        BaseGUI.__reserved_uuids.append(uuid)
+        print("max: ", BaseGUI.__global_max_uuid, "\n",
+              "reserved: ", BaseGUI.__reserved_uuids, "\n",
+              "uuid: ", uuid) if False else None
+        return uuid
+    
+    @staticmethod
+    def _refresh_uuid(uuid: int) -> int:
+        while uuid in BaseGUI.__reserved_uuids:
+            uuid = dpg.generate_uuid() 
+        return uuid
+        
 ########################################################################################################################
 # Themes
 ########################################################################################################################
@@ -76,3 +128,14 @@ with dpg.theme() as _completion_theme:
         dpg.add_theme_color(dpg.mvThemeCol_Header, (189, 189, 242), category=dpg.mvThemeCat_Core)
         dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 0, 0), category=dpg.mvThemeCat_Core)
         dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
+########################################################################################################################    
+def curent_item(uuid):
+    try:
+        message = f"Текущий элемент: {dpg.get_item_label(uuid)}"
+        dpg.configure_item('hover_logger', default_value=message)
+    except BaseException: pass
+            
+try:
+    with dpg.item_handler_registry(tag=BaseGUI.generate_uuid()) as hover_handler:
+        dpg.add_item_hover_handler(callback=lambda s,a,u: curent_item(a))        
+except SystemError as err: print("Удаление узла")

@@ -1,70 +1,83 @@
+from __future__ import annotations
 import dearpygui.dearpygui as dpg
 from core.utils import select_path
 from torchvision.transforms import v2 # type: ignore
-from config.settings import Configs
+from config.settings import Configs, BaseGUI
+from typing import Optional, Union
 
 
-class ParamNode:
+class ParamNode(BaseGUI):
 
-    def __init__(self, label: str, type: str, **params):
-        self._uuid = dpg.generate_uuid()
-        self._container_uuid = dpg.generate_uuid()
+    def __init__(self, label: str, type: str, uuid:Optional[int]=None, **params):
+        super().__init__(uuid)
+        self._container_uuid = BaseGUI.generate_uuid()
         self._label: str = label
         self._type: str = type
         self._params = params
-        self._params.update({'width': Configs.width()})
+        if type not in ['blank']:
+            self._params.update({'width': Configs.width()})
 
-    def info(self):
-        return (self._uuid, self._container_uuid, self._label, self._type, self._params)
+    @staticmethod
+    def factory(label: str, type: str, params: dict) -> ParamNode:
+        return ParamNode(label, type, **params)
+
+    def get_dict(self) -> dict:
+        return dict(
+            label=self._label,
+            type=self._type,
+            params=self._params
+        )
     
     def _submit(self, node_uuid):
-
-        with dpg.node_attribute(parent=node_uuid, user_data=self, attribute_type=dpg.mvNode_Attr_Static, 
-                                tag=self._container_uuid):
-            self._submit_in_container(self._container_uuid)
+        try:
+            with dpg.node_attribute(tag=self._container_uuid,
+                                    parent=node_uuid, 
+                                    user_data=self, 
+                                    attribute_type=dpg.mvNode_Attr_Static):
+                self._submit_in_container(self._container_uuid)
+        except: raise RuntimeError("Ошибка при попытке прикрепления статического атрибута")
           
             
     def _submit_in_container(self, parent, inner_type=None):
         match_type = inner_type if inner_type else self._type
         match match_type:
             case 'int':
-                dpg.add_input_int(**self._params, label=self._label, tag=self._uuid, parent=parent)
+                dpg.add_input_int(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'float':
-                dpg.add_input_float(**self._params, label=self._label, tag=self._uuid, parent=parent)
+                dpg.add_input_float(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'text'|'text/tuple':
-                dpg.add_input_text(**self._params, label=self._label, tag=self._uuid, parent=parent)
+                dpg.add_input_text(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'combo':
-                dpg.add_combo(**self._params, label=self._label, tag=self._uuid, parent=parent)
+                dpg.add_combo(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'collaps':
                 with dpg.child_window(width=250, height=80, parent=parent):
                     self.checkboxes_uuids = []
-                    with dpg.collapsing_header(label=self._label, default_open=True, tag=self._uuid):
+                    with dpg.collapsing_header(label=self._label, default_open=True, tag=self.uuid):
                         for item in self._params['items']:
                             self.checkboxes_uuids.append(ParamNode(**item)\
-                                ._submit_in_container(self._uuid, 'bool'))     
+                                ._submit_in_container(self.uuid, 'bool'))     
             case 'blank':
-                self._params.pop('width', None)
-                dpg.add_text(**self._params, default_value=self._label, tag=self._uuid, parent=parent)
+                dpg.add_text(**self._params, default_value=self._label, tag=self.uuid, parent=parent)
             case 'bool':
                 if self._type == 'bool': self._type='blank'
                 with dpg.group(horizontal=True) as group:     
                     param = ParamNode(label=self._label, type=self._type, **self._params)
                     param._submit_in_container(group)
                     return dpg.add_checkbox(default_value=False, 
-                                            before=param._uuid,
+                                            before=param.uuid,
                                             user_data=param,
-                                            tag=self._uuid)
+                                            tag=self.uuid)
             case 'button':
-                dpg.add_button(**self._params, label=self._label, tag=self._uuid, parent=parent)
+                dpg.add_button(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'file':
                 with dpg.group(horizontal=True, parent=parent):
-                    dpg.add_input_text(width=150, no_spaces=True, tag=self._uuid)
-                    dpg.add_button(label="Path", user_data=self._uuid, callback=select_path)
-                dpg.add_button(**self._params, label=self._label, user_data=(dpg.get_item_user_data(parent), self._uuid))
+                    dpg.add_input_text(width=150, no_spaces=True, tag=self.uuid)
+                    dpg.add_button(label="Path", user_data=self.uuid, callback=select_path)
+                dpg.add_button(**self._params, label=self._label, user_data=(dpg.get_item_user_data(parent), self.uuid))
             case 'path':
                 with dpg.group(horizontal=True, parent=parent):
-                    dpg.add_input_text(**self._params, width=150, no_spaces=True, tag=self._uuid)
-                    dpg.add_button(label="Path", user_data=self._uuid, callback=select_path)
+                    dpg.add_input_text(**self._params, width=150, no_spaces=True, tag=self.uuid)
+                    dpg.add_button(label="Path", user_data=self.uuid, callback=select_path)
     
     @staticmethod
     def submit_config(name, params, defaults, parent):
@@ -84,8 +97,8 @@ class ParamNode:
     def get_value(self, with_user_data=False):
         match self._type:
             case 'combo':
-                choices = dpg.get_item_user_data(self._uuid)
-                value = dpg.get_value(self._uuid)
+                choices = dpg.get_item_user_data(self.uuid)
+                value = dpg.get_value(self.uuid)
                 value = value if value else self._params.get('default_value')
                 return {self._label: choices[value]}
                         
@@ -99,19 +112,18 @@ class ParamNode:
                     else: return {'Transform': None}
                 return {self._label: values}
             case 'int' | 'float' | 'text' | 'text/tuple':
-                value = dpg.get_value(self._uuid) 
+                value = dpg.get_value(self.uuid) 
                 value = value if value else self._params.get('default_value')
                 if self._type=='text/tuple' and isinstance(value, str):
-                    value = list(map(int, value.split(", ")))
-                return {self._label: dpg.get_item_user_data(self._uuid)(value) \
+                    value = list(map(int, value[1:-1].split(", ")))
+                return {self._label: dpg.get_item_user_data(self.uuid)(value) \
                                     if with_user_data \
                                     else value}
-                       
             case 'blank':
-                return {self._label: dpg.get_item_user_data(self._uuid)()} 
+                return {self._label: dpg.get_item_user_data(self.uuid)()} 
             case 'bool': # TODO: fix with with_user_data
-                return {self._label: dpg.get_item_user_data(self._uuid).get_value()\
-                        if dpg.get_value(self._uuid) is True \
+                return {self._label: dpg.get_item_user_data(self.uuid).get_value()\
+                        if dpg.get_value(self.uuid) is True \
                         else None}
             case 'file'|'path'|'button':
                 return None    

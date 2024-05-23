@@ -14,13 +14,18 @@ import pdb
 class LayerNode(Node):
 
     @staticmethod
-    def factory(name, data, params:tuple[dict]|None=None, default_params: dict[str,str]=None, **node_params):
+    def factory(name, data, params:Optional[tuple[dict]]=None, default_params: Optional[dict[str, str]]=None, **node_params):
         node = LayerNode(name, data, params, default_params, **node_params)
         return node
 
-    def __init__(self, label: str, data, params:tuple[dict]=None, default_params: dict[str,str]=None, **node_params):
+    def __init__(self, 
+                 label: str, 
+                 data, 
+                 params:Optional[tuple[dict]]=None, 
+                 default_params: Optional[dict[str,str]]=None, 
+                 **node_params):
         super().__init__(label, data, **node_params)
-        self._add_input_attribute(InputNodeAttribute("data", self))
+        self._add_input_attribute(InputNodeAttribute("data"))
         self._add_output_attribute(OutputNodeAttribute("weighted data"))
         self._add_params(params)
 
@@ -28,13 +33,22 @@ class LayerNode(Node):
 class ModuleNode(Node):
 
     @staticmethod
-    def factory(label, sequential: tuple[tuple[DragSource, dict]], params: list[dict[str, Any]]=None, default_params: dict[str,str]=None, **node_params):
+    def factory(label, 
+                sequential: tuple[tuple[DragSource, dict]], 
+                params: Optional[list[dict[str, Any]]]=None, 
+                default_params: Optional[dict[str,str]]=None, 
+                **node_params):
         node = ModuleNode(label, sequential, params, default_params, **node_params)
         return node
 
-    def __init__(self, label, sequential: tuple[tuple[DragSource, dict]], params: list[dict[str, Any]]=None, default_params: dict[str,str]=None, **node_params):
+    def __init__(self, 
+                 label, 
+                 sequential: tuple[tuple[DragSource, dict]], 
+                 params: Optional[list[dict[str, Any]]]=None, 
+                 default_params: Optional[dict[str,str]]=None, 
+                 **node_params):
         super().__init__(label, None, **node_params)
-        self._add_input_attribute(InputNodeAttribute("data", self))
+        self._add_input_attribute(InputNodeAttribute("data"))
         self._add_output_attribute(OutputNodeAttribute("weighted data"))
         expand = [{"label":"Развернуть", "type":"button", "callback":self.expand},
                   {"label":"Редактировать", "type":"button", "callback":self.edit}]
@@ -47,7 +61,8 @@ class ModuleNode(Node):
         self.pos: dict[str, int] = node_params.get('pos', {"x":0, "y":0})
 
     @staticmethod
-    def replace_default_params(sequential: tuple[tuple[object, dict]], new_defaults: dict):
+    def replace_default_params(sequential: tuple[tuple[object, dict]], 
+                               new_defaults: dict):
         idx = 0
         updated_sequential = deepcopy(sequential)
         for i, layer_defaults in enumerate(updated_sequential):
@@ -68,11 +83,7 @@ class ModuleNode(Node):
         for node in self._data:
             editor.add_node(node)
             node._submit(self._node_editor_uuid)
-            
-        for inx in range(len(self._data) - 1):
-            first = self._data[inx]._output_attributes[0]
-            sec = self._data[inx + 1]._input_attributes[0]
-            LinkNode._link_callback(self._node_editor_uuid, (first._uuid, sec._uuid))
+        LinkNode.link_nodes(self._data, self._node_editor_uuid)
      
     def expand(self) -> None:
         editor = NodeEditor.delete_in_editor(self._node_editor_uuid, self)
@@ -90,19 +101,35 @@ class ModuleNode(Node):
             if len(node)>1:
                 defaults = node[1].copy()
                 if source._generator.__qualname__ == 'ModuleNode.factory':
-                    source._data = ModuleNode.replace_default_params(source._data, defaults)
-                    with dpg.collapsing_header(parent=modal, label=source._label, default_open=False) as submodule:
-                        sources, self.pos, source_params = ModuleNode(source._label, source._data,
-                                                                      pos={'x':0, "y":self.pos['y'] + 200}).submit_module(submodule)
+                    source._data = ModuleNode.replace_default_params(
+                                            source._data, 
+                                            defaults)
+                    with dpg.collapsing_header(parent=modal, 
+                                               label=source._label, 
+                                               default_open=False) as submodule:
+                        sources, self.pos, source_params = \
+                            ModuleNode(source._label, 
+                                       source._data,
+                                       pos={'x':0, "y":self.pos['y'] + 200})\
+                                           .submit_module(submodule)
                     all_sources += sources
                     all_params += source_params
                     continue
-            all_params.append(ParamNode.submit_config(source._label, source._params, defaults, modal))
+            all_params.append(
+                ParamNode.submit_config(source._label, 
+                                        source._params, 
+                                        defaults, 
+                                        modal))
             self.pos['x'] += 200
             params = {"pos":(self.pos['x'], self.pos['y'])}
 
             all_sources.append(
-                deepcopy((source._label, source._generator, source._data, source._params, source._default_params, params))
+                deepcopy((source._label, 
+                          source._generator, 
+                          source._data, 
+                          source._params, 
+                          source._default_params, 
+                          params))
                 )
 
         return all_sources, self.pos, all_params
@@ -115,7 +142,6 @@ class ModuleNode(Node):
                     if returned and ((value := returned.get(origin_param['label'], None)) is not None):
                         origin_param['default_value'] = value      
         editor: NodeEditor = dpg.get_item_user_data(dpg.get_item_parent(parent))
-        
         self._data = [editor.on_drop(None, source, None, module=True) for source in all_sources]
         if dpg.get_value(collapse_checkbox):
             super()._submit(parent)

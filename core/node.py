@@ -4,33 +4,77 @@ from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
 from core.param_node import ParamNode
 from app import lightning_data
-from config.settings import _completion_theme
-from typing import Any, Union
+from config.settings import _completion_theme, Configs, BaseGUI, hover_handler
+from typing import Any, Union, Optional
+from copy import deepcopy
+from config.dicts import dicts 
 import pdb
 
 
-class Node:
+class Node(BaseGUI):
 
     debug=True
 
-    def __init__(self, label: str, data=None, **node_params):
-
-        self.__uuid: Union[int, str] = dpg.generate_uuid()
+    def __init__(self, label: str, data=None, uuid:Optional[int]=None,
+                 params:list[ParamNode]=[], 
+                 **node_params):
+        super().__init__(uuid)
         self._label: str = label
+        self._data = data
         self._input_attributes: list[InputNodeAttribute] = []
         self._output_attributes: list[OutputNodeAttribute] = []
-        self._params: list[ParamNode] = []
-        self._data = data
+        self._params: list[ParamNode] = deepcopy(params)
         self._node_params = node_params
+        
+    @staticmethod    
+    def init_factory(editor, 
+                     label: str, 
+                     input_attributes: list[dict], 
+                     output_attributes: list[dict], 
+                     params: list[dict], 
+                     node_params: dict) -> Node:
+        
+        params_instances: list[ParamNode] = \
+            [ParamNode.factory(
+                attr['label'], 
+                attr['type'], 
+                attr['params']) 
+             for attr 
+             in params]
+        node = Node(label, 
+                    dicts.get(label, None), 
+                    params=params_instances, 
+                    **node_params)
+        map_input_uuids = {attr['uuid']: node._add_input_attribute(
+                                        InputNodeAttribute.factory(
+                                            attr['label'], 
+                                            attr['uuid'], 
+                                            attr['linked_out_attr'])
+                                        ).uuid
+                            for attr 
+                            in input_attributes}
+        map_output_uuids = {attr['uuid']: node._add_output_attribute(
+                                        OutputNodeAttribute.factory(
+                                            attr['label'], 
+                                            attr['uuid'], 
+                                            attr['children'])
+                                        ).uuid
+                            for attr 
+                            in output_attributes}
+        editor.add_node(node)
+        node._submit(editor.uuid)
+        return node, map_input_uuids, map_output_uuids
 
     def _finish(self):
-        dpg.bind_item_theme(self.__uuid, _completion_theme)
+        dpg.bind_item_theme(self.uuid, _completion_theme)
 
     def _add_input_attribute(self, attribute: InputNodeAttribute):
         self._input_attributes.append(attribute)
+        return attribute
 
     def _add_output_attribute(self, attribute: OutputNodeAttribute):
         self._output_attributes.append(attribute)
+        return attribute
 
     def _add_params(self, params: list[dict[str, Any]]):
         if params:
@@ -45,27 +89,49 @@ class Node:
 
     def _del(self):
         self._delinks()
-        dpg.delete_item(self.__uuid)
+        dpg.delete_item(self.uuid)
         del self
         
 
     def _submit(self, parent):
         self._node_editor_uuid = parent
-        with dpg.node(**self._node_params, parent=parent, label=self._label, tag=self.__uuid, user_data=self):
+        with dpg.node(tag=self.uuid,
+                      parent=parent, 
+                      label=self._label, 
+                      user_data=self, 
+                      **self._node_params):
             for attribute in self._input_attributes:
-                attribute._submit(self.__uuid)
+                attribute._submit(self.uuid)
 
             for attribute in self._params:
-                attribute._submit(self.__uuid)
+                attribute._submit(self.uuid)
             
             for attribute in self._output_attributes:
-                attribute._submit(self.__uuid)
+                attribute._submit(self.uuid)
            
-        dpg.bind_item_handler_registry(self.__uuid, "hover_handler")
+        dpg.bind_item_handler_registry(self.uuid, hover_handler)
         self._finish()
         
+        
+    def get_dict(self) -> dict:
+        return dict(
+            uuid=self.uuid,
+            label=self._label, 
+            input_attributes=[attr.get_dict() 
+                              for attr 
+                              in self._input_attributes],
+            output_attributes=[attr.get_dict() 
+                               for attr 
+                               in self._output_attributes],
+            params=[param.get_dict() 
+                    for param 
+                    in self._params],
+            node_params=self._node_params,
+        )
+    
     def next(self, out_idx: int=0, node_idx: int=0) -> Union[Node, None]:
-        input_attrs: list[InputNodeAttribute] = self._output_attributes[out_idx]._children
+        input_attrs: list[InputNodeAttribute] = \
+            self._output_attributes[out_idx]._children
         return input_attrs[node_idx].get_node() if input_attrs else None
         
 

@@ -1,0 +1,1469 @@
+{
+    "LazyConv2d_1215": {
+        "uuid": 1215,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1216,
+                "label": "data",
+                "linked_out_attr": null
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1217,
+                "label": "weighted data",
+                "children": [
+                    1221,
+                    1221
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 100,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 11,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 4,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                200,
+                200
+            ]
+        }
+    },
+    "ReLU_1220": {
+        "uuid": 1220,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1221,
+                "label": "data",
+                "linked_out_attr": 1217
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1222,
+                "label": "weighted data",
+                "children": [
+                    1234,
+                    1234
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                400,
+                200
+            ]
+        }
+    },
+    "LazyConv2d_1233": {
+        "uuid": 1233,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1234,
+                "label": "data",
+                "linked_out_attr": 1222
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1235,
+                "label": "weighted data",
+                "children": [
+                    1239,
+                    1239
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 100,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                600,
+                200
+            ]
+        }
+    },
+    "ReLU_1238": {
+        "uuid": 1238,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1239,
+                "label": "data",
+                "linked_out_attr": 1235
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1240,
+                "label": "weighted data",
+                "children": [
+                    1252,
+                    1252
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                800,
+                200
+            ]
+        }
+    },
+    "LazyConv2d_1251": {
+        "uuid": 1251,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1252,
+                "label": "data",
+                "linked_out_attr": 1240
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1253,
+                "label": "weighted data",
+                "children": [
+                    1257,
+                    1257
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 100,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1000,
+                200
+            ]
+        }
+    },
+    "ReLU_1256": {
+        "uuid": 1256,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1257,
+                "label": "data",
+                "linked_out_attr": 1253
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1258,
+                "label": "weighted data",
+                "children": [
+                    1266,
+                    1266
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                1200,
+                200
+            ]
+        }
+    },
+    "MaxPool2d_1265": {
+        "uuid": 1265,
+        "label": "MaxPool2d",
+        "input_attributes": [
+            {
+                "uuid": 1266,
+                "label": "data",
+                "linked_out_attr": 1258
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1267,
+                "label": "weighted data",
+                "children": [
+                    1279,
+                    1279
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 3,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 2,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1400,
+                200
+            ]
+        }
+    },
+    "LazyConv2d_1278": {
+        "uuid": 1278,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1279,
+                "label": "data",
+                "linked_out_attr": 1267
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1280,
+                "label": "weighted data",
+                "children": [
+                    1284,
+                    1284
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 256,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 5,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 2,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                200,
+                400
+            ]
+        }
+    },
+    "ReLU_1283": {
+        "uuid": 1283,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1284,
+                "label": "data",
+                "linked_out_attr": 1280
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1285,
+                "label": "weighted data",
+                "children": [
+                    1297,
+                    1297
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                400,
+                400
+            ]
+        }
+    },
+    "LazyConv2d_1296": {
+        "uuid": 1296,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1297,
+                "label": "data",
+                "linked_out_attr": 1285
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1298,
+                "label": "weighted data",
+                "children": [
+                    1302,
+                    1302
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 256,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                600,
+                400
+            ]
+        }
+    },
+    "ReLU_1301": {
+        "uuid": 1301,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1302,
+                "label": "data",
+                "linked_out_attr": 1298
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1303,
+                "label": "weighted data",
+                "children": [
+                    1315,
+                    1315
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                800,
+                400
+            ]
+        }
+    },
+    "LazyConv2d_1314": {
+        "uuid": 1314,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1315,
+                "label": "data",
+                "linked_out_attr": 1303
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1316,
+                "label": "weighted data",
+                "children": [
+                    1320,
+                    1320
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 256,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1000,
+                400
+            ]
+        }
+    },
+    "ReLU_1319": {
+        "uuid": 1319,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1320,
+                "label": "data",
+                "linked_out_attr": 1316
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1321,
+                "label": "weighted data",
+                "children": [
+                    1329,
+                    1329
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                1200,
+                400
+            ]
+        }
+    },
+    "MaxPool2d_1328": {
+        "uuid": 1328,
+        "label": "MaxPool2d",
+        "input_attributes": [
+            {
+                "uuid": 1329,
+                "label": "data",
+                "linked_out_attr": 1321
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1330,
+                "label": "weighted data",
+                "children": [
+                    1342,
+                    1342
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 3,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 2,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1400,
+                400
+            ]
+        }
+    },
+    "LazyConv2d_1341": {
+        "uuid": 1341,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1342,
+                "label": "data",
+                "linked_out_attr": 1330
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1343,
+                "label": "weighted data",
+                "children": [
+                    1347,
+                    1347
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 384,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 3,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                200,
+                600
+            ]
+        }
+    },
+    "ReLU_1346": {
+        "uuid": 1346,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1347,
+                "label": "data",
+                "linked_out_attr": 1343
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1348,
+                "label": "weighted data",
+                "children": [
+                    1360,
+                    1360
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                400,
+                600
+            ]
+        }
+    },
+    "LazyConv2d_1359": {
+        "uuid": 1359,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1360,
+                "label": "data",
+                "linked_out_attr": 1348
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1361,
+                "label": "weighted data",
+                "children": [
+                    1365,
+                    1365
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 384,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                600,
+                600
+            ]
+        }
+    },
+    "ReLU_1364": {
+        "uuid": 1364,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1365,
+                "label": "data",
+                "linked_out_attr": 1361
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1366,
+                "label": "weighted data",
+                "children": [
+                    1378,
+                    1378
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                800,
+                600
+            ]
+        }
+    },
+    "LazyConv2d_1377": {
+        "uuid": 1377,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1378,
+                "label": "data",
+                "linked_out_attr": 1366
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1379,
+                "label": "weighted data",
+                "children": [
+                    1383,
+                    1383
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 384,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1000,
+                600
+            ]
+        }
+    },
+    "ReLU_1382": {
+        "uuid": 1382,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1383,
+                "label": "data",
+                "linked_out_attr": 1379
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1384,
+                "label": "weighted data",
+                "children": [
+                    1392,
+                    1392
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                1200,
+                600
+            ]
+        }
+    },
+    "MaxPool2d_1391": {
+        "uuid": 1391,
+        "label": "MaxPool2d",
+        "input_attributes": [
+            {
+                "uuid": 1392,
+                "label": "data",
+                "linked_out_attr": 1384
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1393,
+                "label": "weighted data",
+                "children": [
+                    1399,
+                    1399
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 3,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 2,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1400,
+                600
+            ]
+        }
+    },
+    "Dropout_1398": {
+        "uuid": 1398,
+        "label": "Dropout",
+        "input_attributes": [
+            {
+                "uuid": 1399,
+                "label": "data",
+                "linked_out_attr": 1393
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1400,
+                "label": "weighted data",
+                "children": [
+                    1412,
+                    1412
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "p",
+                "type": "float",
+                "params": {
+                    "default_value": 0.5,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1600,
+                600
+            ]
+        }
+    },
+    "LazyConv2d_1411": {
+        "uuid": 1411,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1412,
+                "label": "data",
+                "linked_out_attr": 1400
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1413,
+                "label": "weighted data",
+                "children": [
+                    1417,
+                    1417
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 10,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 3,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                200,
+                800
+            ]
+        }
+    },
+    "ReLU_1416": {
+        "uuid": 1416,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1417,
+                "label": "data",
+                "linked_out_attr": 1413
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1418,
+                "label": "weighted data",
+                "children": [
+                    1430,
+                    1430
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                400,
+                800
+            ]
+        }
+    },
+    "LazyConv2d_1429": {
+        "uuid": 1429,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1430,
+                "label": "data",
+                "linked_out_attr": 1418
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1431,
+                "label": "weighted data",
+                "children": [
+                    1435,
+                    1435
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 10,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                600,
+                800
+            ]
+        }
+    },
+    "ReLU_1434": {
+        "uuid": 1434,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1435,
+                "label": "data",
+                "linked_out_attr": 1431
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1436,
+                "label": "weighted data",
+                "children": [
+                    1448,
+                    1448
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                800,
+                800
+            ]
+        }
+    },
+    "LazyConv2d_1447": {
+        "uuid": 1447,
+        "label": "LazyConv2d",
+        "input_attributes": [
+            {
+                "uuid": 1448,
+                "label": "data",
+                "linked_out_attr": 1436
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1449,
+                "label": "weighted data",
+                "children": [
+                    1453,
+                    1453
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "out_channels",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 10,
+                    "width": 150
+                }
+            },
+            {
+                "label": "kernel_size",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "stride",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 1,
+                    "width": 150
+                }
+            },
+            {
+                "label": "padding",
+                "type": "int",
+                "params": {
+                    "step": 1,
+                    "min_value": 1,
+                    "min_clamped": true,
+                    "default_value": 0,
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1000,
+                800
+            ]
+        }
+    },
+    "ReLU_1452": {
+        "uuid": 1452,
+        "label": "ReLU",
+        "input_attributes": [
+            {
+                "uuid": 1453,
+                "label": "data",
+                "linked_out_attr": 1449
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1454,
+                "label": "weighted data",
+                "children": [
+                    1460,
+                    1460
+                ]
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                1200,
+                800
+            ]
+        }
+    },
+    "AdaptiveAvgPool2d_1459": {
+        "uuid": 1459,
+        "label": "AdaptiveAvgPool2d",
+        "input_attributes": [
+            {
+                "uuid": 1460,
+                "label": "data",
+                "linked_out_attr": 1454
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1461,
+                "label": "weighted data",
+                "children": [
+                    1465,
+                    1465
+                ]
+            }
+        ],
+        "params": [
+            {
+                "label": "output_size",
+                "type": "text/tuple",
+                "params": {
+                    "default_value": [
+                        1,
+                        1
+                    ],
+                    "width": 150
+                }
+            }
+        ],
+        "node_params": {
+            "pos": [
+                1400,
+                800
+            ]
+        }
+    },
+    "Flatten_1464": {
+        "uuid": 1464,
+        "label": "Flatten",
+        "input_attributes": [
+            {
+                "uuid": 1465,
+                "label": "data",
+                "linked_out_attr": 1461
+            }
+        ],
+        "output_attributes": [
+            {
+                "uuid": 1466,
+                "label": "weighted data",
+                "children": []
+            }
+        ],
+        "params": [],
+        "node_params": {
+            "pos": [
+                1600,
+                800
+            ]
+        }
+    }
+}
