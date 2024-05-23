@@ -14,8 +14,11 @@ class ParamNode(BaseGUI):
         self._label: str = label
         self._type: str = type
         self._params = params
-        if type not in ['blank']:
-            self._params.update({'width': Configs.width()})
+        if type not in ['blank', 'bool']:
+            self._params.update(
+                {'width': Configs.width(),
+                 })
+       
 
     @staticmethod
     def factory(label: str, type: str, params: dict) -> ParamNode:
@@ -42,9 +45,9 @@ class ParamNode(BaseGUI):
         match_type = inner_type if inner_type else self._type
         match match_type:
             case 'int':
-                dpg.add_input_int(**self._params, label=self._label, tag=self.uuid, parent=parent)
+                dpg.add_input_int(**self._params, label=self._label, min_value=1, min_clamped=True, step=2, tag=self.uuid, parent=parent)
             case 'float':
-                dpg.add_input_float(**self._params, label=self._label, tag=self.uuid, parent=parent)
+                dpg.add_input_float(**self._params, label=self._label, step=0.00001, min_value=0.000001, min_clamped=True, tag=self.uuid, parent=parent)
             case 'text'|'text/tuple':
                 dpg.add_input_text(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'combo':

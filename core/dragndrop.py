@@ -1,7 +1,10 @@
 from __future__ import annotations
 import dearpygui.dearpygui as dpg
+import external.DearPyGui_Markdown as dpg_markdown
 from config.settings import _source_theme, BaseGUI, hover_handler
 from typing import Optional
+from config import dicts
+
 
 
 class DragSourceContainer(BaseGUI):
@@ -34,24 +37,30 @@ class DragSourceContainer(BaseGUI):
 
 class DragSource():
 
-    def __init__(self, label: str, node_generator, data, 
-                 params: Optional[tuple[dict]]=None, default_params: Optional[dict[str, str]]=None, **node_params):
+    def __init__(self, label: str, data=None, 
+                 **node_params):
         
         self._label = label
-        self._generator = node_generator
-        self._data = data
-        self._params = params
-        self._default_params = default_params
+        func = dicts.modules[label].func
+        self._data =  func if func else data
+        
+        self._generator = dicts.modules[label].generator
+        self._params = dicts.modules[label].params
+        self._default_params = dicts.modules[label].default_params
+        self.__tooltip: str = dicts.modules[label].tooltip
         self._node_params = node_params
         
 
     def _submit(self, parent: DragSourceContainer):
-        dpg.add_button(label=self._label, 
+        button = dpg.add_button(label=self._label, 
                         parent=parent, 
                         width=-1)
-        dpg.bind_item_handler_registry(dpg.last_item(), hover_handler)
-        dpg.bind_item_theme(dpg.last_item(), _source_theme)
-        with dpg.drag_payload(parent=dpg.last_item(), 
+        if self.__tooltip:
+            with dpg.tooltip(button):
+                dpg_markdown.add_text(self.__tooltip)
+        dpg.bind_item_handler_registry(button, hover_handler)
+        dpg.bind_item_theme(button, _source_theme)
+        with dpg.drag_payload(parent=button, 
                               drag_data=(self._label, 
                                          self._generator, 
                                          self._data, 

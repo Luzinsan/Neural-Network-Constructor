@@ -97,10 +97,6 @@ with dpg.theme() as global_theme:
         dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (255, 255, 255), category=dpg.mvThemeCat_Core)
         # demo.show_demo()
         # show_documentation()
-    with dpg.font_registry() as default_font:
-        with dpg.font('config/Comfortaa-Regular.ttf', 14, default_font=True, tag="Default font"):
-            dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
-    dpg.bind_font("Default font")
 dpg.bind_theme(global_theme)
 ########################################################################################################################
 with dpg.theme() as _source_theme:

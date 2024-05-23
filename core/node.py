@@ -7,7 +7,7 @@ from app import lightning_data
 from config.settings import _completion_theme, Configs, BaseGUI, hover_handler
 from typing import Any, Union, Optional
 from copy import deepcopy
-from config.dicts import dicts 
+from config import dicts 
 import pdb
 
 
@@ -42,7 +42,7 @@ class Node(BaseGUI):
              for attr 
              in params]
         node = Node(label, 
-                    dicts.get(label, None), 
+                    dicts.modules[label].func, 
                     params=params_instances, 
                     **node_params)
         map_input_uuids = {attr['uuid']: node._add_input_attribute(
