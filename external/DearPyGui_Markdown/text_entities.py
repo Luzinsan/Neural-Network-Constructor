@@ -65,7 +65,7 @@ class AttributeController(list[Attribute]):
         return self.font
 
     def get_color(self) -> list[int, int, int, int]:
-        self.text_color = [255, 255, 255, 255]
+        self.text_color = [0, 0, 0, 255]
         if Font in self:
             _Font: Font = self[self.index(Font)]  # noqa
             self.text_color = _Font.color

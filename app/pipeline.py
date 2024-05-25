@@ -12,11 +12,9 @@ from lightning import Trainer
 
 from core.node import Node
 from app.lightning_module import Module
-from app.lightning_data import DataModule
 from nodes import dataset
 from nodes import train_params_node
 from core.utils import send_message, terminate_thread
-import webbrowser
 import threading
 
 
@@ -36,7 +34,7 @@ class Pipeline:
             self.net = Module(sequential=nn.Sequential(*self.pipeline), optimizer=self.train_params['Optimizer'],
                               lr=self.train_params['Learning Rate'], loss_func=self.train_params['Loss'])
             self.net.apply_init(self.dataset, self.train_params['Initialization'])
-            send_message(self.net, 'log', 'Инициализированная сеть') 
+            send_message(self.net, 'code', 'Инициализированная сеть') 
             self.net.layer_summary((1,1,*self.dataset.shape)) if Pipeline.debug else None
         except (BaseException, RuntimeError, TypeError) as err: 
             send_message(err, 'error', "Возникла ошибка во время инициализации сети")
@@ -47,9 +45,8 @@ class Pipeline:
                     task_name=self.train_params["Task name"],
                     continue_last_task=True)
         self.task.connect(self.train_params)
-        link = self.task.get_output_log_web_page()
-        send_message(link, 'log', 'Запуск clearml', 
-                     lambda: webbrowser.open(link)) 
+        send_message(f'[ClearML]({self.task.get_output_log_web_page()})', 
+                     'log', 'Запуск ClearML') 
 
     
     @staticmethod

@@ -5,6 +5,7 @@ sys.path.insert(1, os.getcwd())
 
 from config.setup import *
 from config.settings import Configs
+import pdb
 
 from core import node_editor
 from core.dragndrop import DragSource, DragSourceContainer
@@ -42,7 +43,7 @@ class App:
                 "LazyConv1d","LazyConv2d","LazyConv3d",
                 "BatchNorm1d","BatchNorm2d","BatchNorm3d",
                 "Flatten","AvgPool2d","MaxPool2d","AdaptiveAvgPool2d",
-                "Dropout","ReLU","Softmax","Tanh","GELU",]
+                "Dropout","ReLU","Sigmoid","Tanh",]
          }
         self.layer_container = DragSourceContainer("Слои|ф.активации", 150, 0)
         self.layer_container.add_drag_source(layers.values())
@@ -50,7 +51,7 @@ class App:
         
         #region architectures
         archs = {
-            'LeNet': DragSource("LeNet",
+            'LeNet5': DragSource("LeNet5",
                                 (
                                     (layers['LazyConv2d'], {'out_channels':6,"kernel_size":5,"stride":1,"padding":3}),(layers['ReLU'], ),
                                     (layers['MaxPool2d'], {"kernel_size":2,"stride":2}),
@@ -62,7 +63,22 @@ class App:
                                     (layers['LazyLinear'], {'out_features':10}),
                                 ),
                                  ),
-            'VGG': DragSource("VGG",
+            'AlexNet': DragSource("AlexNet",
+                                (
+                                    (layers['LazyConv2d'], {'out_channels':96,"kernel_size":11,"stride":4,"padding":1, }),(layers['ReLU'], ),
+                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),
+                                    (layers['LazyConv2d'], {'out_channels':256,"kernel_size":5,"stride":1,"padding":2, }),(layers['ReLU'], ),
+                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),
+                                    (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
+                                    (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
+                                    (layers['LazyConv2d'], {'out_channels':256,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
+                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),(layers['Flatten'], ),
+                                    (layers['LazyLinear'], {'out_features':4096,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
+                                    (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
+                                    (layers['LazyLinear'], {'out_features':10,  }),
+                                ),
+                                 ),
+            'VGG-11': DragSource("VGG-11",
                                 (
                                     (layers['LazyConv2d'], {'out_channels':16,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
                                     (layers['MaxPool2d'], {"kernel_size":2,"stride":2}),
@@ -83,22 +99,7 @@ class App:
                                     (layers['LazyLinear'], {'out_features':10,  }),
                                 ),
                                  ),
-            'AlexNet': DragSource("AlexNet",
-                                (
-                                    (layers['LazyConv2d'], {'out_channels':96,"kernel_size":11,"stride":4,"padding":1, }),(layers['ReLU'], ),
-                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),
-                                    (layers['LazyConv2d'], {'out_channels':256,"kernel_size":5,"stride":1,"padding":2, }),(layers['ReLU'], ),
-                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),
-                                    (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
-                                    (layers['LazyConv2d'], {'out_channels':384,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
-                                    (layers['LazyConv2d'], {'out_channels':256,"kernel_size":3,"stride":1,"padding":1, }),(layers['ReLU'], ),
-                                    (layers['MaxPool2d'], {"kernel_size":3,"stride":2}),(layers['Flatten'], ),
-                                    (layers['LazyLinear'], {'out_features':4096,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
-                                    (layers['LazyLinear'], {'out_features':84,  }), (layers['ReLU'], ),(layers['Dropout'], {'p':0.5}),
-                                    (layers['LazyLinear'], {'out_features':10,  }),
-                                ),
-                                 ),
-            'NiN': DragSource("NiN",
+            'Conv-MLP': DragSource("Conv-MLP",
                                 (
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':11, 'stride':4,'padding':0, }),(layers['ReLU'], ),
                                     (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], ),
@@ -106,17 +107,18 @@ class App:
                                 ),
                                  )
         }
-        archs['NiN Net'] = DragSource("NiN Net",
+        archs['NiN'] = DragSource("NiN",
                                 (
-                                    (archs['NiN'], {'out_channels':[96, 96, 96], 'kernel_size':[11,1,1], 'stride':[4, 1, 1],'padding':[0, 0, 0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
-                                    (archs['NiN'], {'out_channels':[256, 256, 256], 'kernel_size':[5,1,1], 'stride':[1, 1, 1],'padding':[2,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
-                                    (archs['NiN'], {'out_channels':[384, 384, 384], 'kernel_size':[3,1,1], 'stride':[1, 1, 1],'padding':[1,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], {'out_channels':[96, 96, 96], 'kernel_size':[11,1,1], 'stride':[4, 1, 1],'padding':[0, 0, 0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], {'out_channels':[256, 256, 256], 'kernel_size':[5,1,1], 'stride':[1, 1, 1],'padding':[2,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], {'out_channels':[384, 384, 384], 'kernel_size':[3,1,1], 'stride':[1, 1, 1],'padding':[1,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
                                     (layers['Dropout'], {'p':0.5}),
-                                    (archs['NiN'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
+                                    (archs['Conv-MLP'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
                                     (layers['AdaptiveAvgPool2d'], {'output_size':'[1, 1]'}),(layers['Flatten'],)
                                 ))
         self.archs_container = DragSourceContainer("Модули", 150, 0)
         self.archs_container.add_drag_source(archs.values())
+        #endregion
         
         
 
@@ -158,8 +160,8 @@ class App:
                         dpg.add_menu_item(label="Show About", callback=lambda:dpg.show_tool(dpg.mvTool_About))
                 
                 with dpg.menu(tag='menu_message_logger', label='---Сообщения---'):
-                    dpg.add_child_window(tag='message_logger', height=200, delay_search=True, width=1600)
-
+                    dpg.add_child_window(tag='message_logger', height=200, width=1000)
+            
             with dpg.group(tag='panel', horizontal=True):
                 # left panel
                 with dpg.group(tag=self.left_panel):
@@ -174,9 +176,9 @@ class App:
 
                 # right panel
                 with dpg.group(tag=self.right_panel):
-                    self.archs_container.submit(self.right_panel)
+                    self.archs_container.submit(self.right_panel) 
                     
-        
+                              
         dpg.set_primary_window(main_window, True)
         dpg.start_dearpygui()
         

@@ -1,6 +1,8 @@
 import dearpygui.dearpygui as dpg
+import external.DearPyGui_Markdown as dpg_markdown
 from dearpygui import demo
 from typing import Optional
+# demo.show_demo()
 ########################################################################################################################
 # Settings
 ########################################################################################################################
@@ -130,8 +132,32 @@ def curent_item(uuid):
         message = f"Текущий элемент: {dpg.get_item_label(uuid)}"
         dpg.configure_item('hover_logger', default_value=message)
     except BaseException: pass
+          
+def popup_tooltip(parent):
+    if (source := dpg.get_item_user_data(parent)):
+        # проверка на core.dragndrop.DragSource 
+        # (для isinstance нужно импортировать класс, что приводит к циклическому импорту)
+        if not hasattr(source, '_image'): return 
+        if image := source._image:
+            width, height, channels, data = dpg.load_image(image)
+            with dpg.texture_registry():
+                image = dpg.add_static_texture(width=width, height=height, default_value=data)    
+        if source._tooltip or source._image or source._details:
+            wrap=800
+            with dpg.popup(parent):
+                if tooltip := source._tooltip:
+                    dpg_markdown.add_text(tooltip, wrap=wrap)
+                if details := source._details:
+                    with dpg.collapsing_header(label="Подробнее"):
+                        dpg_markdown.add_text(details, wrap=wrap)
+                if image: 
+                    dpg.add_image(image, width=wrap, height=wrap * height / width)
+                
+                
             
+  
 try:
     with dpg.item_handler_registry(tag=BaseGUI.generate_uuid()) as hover_handler:
-        dpg.add_item_hover_handler(callback=lambda s,a,u: curent_item(a))        
-except SystemError as err: print("Удаление узла")
+        dpg.add_item_hover_handler(callback=lambda s,a,u: curent_item(a))   
+        dpg.add_item_clicked_handler(callback=lambda s, a, u: popup_tooltip(a[1]))     
+except SystemError as err: print("Удаление узла", err)

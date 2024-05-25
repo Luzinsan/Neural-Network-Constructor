@@ -281,7 +281,7 @@ class MarkdownText:
                 str_entity.set_attributes(str_attributes)
                 self.text_entity.append(str_entity)
 
-    def add(self, wrap: int | float = -1, parent=0):
+    def add(self, wrap: int | float = -1, parent=0, tracked=False):
         '''
         :param wrap: Number of pixels from the start of the item until wrapping starts.
         :param parent: Parent to add this item to. (runtime adding)
@@ -289,7 +289,7 @@ class MarkdownText:
         '''
         print_text: text_entities.LineEntity = wrap_text_entity(self.text_entity, width=wrap)
 
-        with dpg.group(parent=parent, horizontal=True) as group:
+        with dpg.group(parent=parent, horizontal=True, tracked=tracked) as group:
             text_group = dpg.add_group(parent=group)
             attributes_group = dpg.add_group(parent=group)
 
@@ -305,6 +305,7 @@ class MarkdownText:
 def add_text(markdown_text: str,
              wrap: float | int = -1,
              parent: int | str = 0,
+             tracked: bool=False,
              pos: list[int | float, int | float] | tuple[int | float, int | float] = None, ) -> int:
     ''' Adds Markdown text.
     :param wrap: Number of pixels from the start of the item until wrapping starts.
@@ -312,7 +313,7 @@ def add_text(markdown_text: str,
     :pos: Places the item relative to window coordinates, [0,0] is top left.
     :return: group with rendered Markdown text
     '''
-    rendered_group = MarkdownText(markdown_text=markdown_text).add(wrap=wrap, parent=parent)
+    rendered_group = MarkdownText(markdown_text=markdown_text).add(wrap=wrap, parent=parent, tracked=tracked)
     if pos is not None:
         dpg.set_item_pos(rendered_group, pos)
     return rendered_group

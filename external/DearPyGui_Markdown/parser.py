@@ -30,7 +30,7 @@ class MessageEntity:
 
 @dataclass(kw_only=True)
 class MessageEntityFont(MessageEntity):
-    color: str | list[int, int, int, int] = field(default_factory=lambda: [255, 255, 255, 255])
+    color: str | list[int, int, int, int] = field(default_factory=lambda: [0, 0, 0, 255])
     size: int | None = None
 
 

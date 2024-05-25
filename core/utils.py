@@ -1,11 +1,13 @@
 from __future__ import annotations
 import dearpygui.dearpygui as dpg
+import external.DearPyGui_Markdown as dpg_markdown
 from torch import nn
 import datetime
 from typing import Optional
 import threading
 import ctypes
 import re
+import pdb
 from config.settings import Configs
 
 accepted_initializations = [nn.Linear, nn.Conv2d]
@@ -49,30 +51,26 @@ def terminate_thread(thread: threading.Thread):
 
 def send_message(message, type_message: str = 'error', brief:Optional[str]=None, callback=None): 
     dpg.set_item_label('menu_message_logger', f"Сообщения: {brief if brief else message}")
-    logs: list = dpg.get_item_children('message_logger', 1)
-    message = f"{brief}. Подробнее: {message}" if brief else message
-    kwargs = dict(parent='message_logger', 
-                  before=logs[0] if len(logs) else 0, 
-                #   tracked=True
-                  )
-    if callback: 
-        kwargs.update(dict(callback=callback, 
-                           label=message))
-        return dpg.add_button(**kwargs) 
-        
-    map_color_message = {
-        'error':(255,0,0), 
-        'warning':(255,255,0),
-        'log':(0,255,0),
+    
+    message = f"{brief}.\nПодробнее: {message}" if brief else message
+     
+    map_style_message = {
+        'error': '<font color="(255,0,0)">{}</font>', 
+        'warning':'<font color="(255,255,0)">{}</font>',
+        'log':'<font color="(0,255,0)">{}</font>',
+        'code':'```\n{}\n```',
     }
-    color = map_color_message.get(type_message)
-    if color: 
-        kwargs.update(dict(color=color))
+    style = map_style_message.get(type_message)
+    if style: 
         if type_message=='error' and re.search('Traceback', message):
             message = "\n".join(re.findall(r'^.*Error:.*$', message, re.MULTILINE))
+        message=style.format(message)
     
-    kwargs.update(dict(default_value=message))
-    dpg.add_text(**kwargs)
+    group = dpg_markdown.add_text(markdown_text=message, parent='message_logger', 
+                                  wrap=dpg.get_item_width('message_logger'))
+    
+    dpg.set_y_scroll('message_logger', 
+                     dpg.get_y_scroll_max('message_logger') + dpg.get_item_height(group))
     print(message) if Configs.logger() else None
 
 def select_path(sender, app_data, user_data):
