@@ -142,16 +142,19 @@ def popup_tooltip(parent):
             width, height, channels, data = dpg.load_image(image)
             with dpg.texture_registry():
                 image = dpg.add_static_texture(width=width, height=height, default_value=data)    
-        if source._tooltip or source._image or source._details:
+        if source._popup or source._image or source._details:
             wrap=800
             with dpg.popup(parent):
-                if tooltip := source._tooltip:
-                    dpg_markdown.add_text(tooltip, wrap=wrap)
+                if popup := source._popup:
+                    dpg_markdown.add_text(popup, wrap=wrap)
                 if details := source._details:
                     with dpg.collapsing_header(label="Подробнее"):
                         dpg_markdown.add_text(details, wrap=wrap)
                 if image: 
                     dpg.add_image(image, width=wrap, height=wrap * height / width)
+        if tooltip:= source._tooltip:
+            with dpg.tooltip(parent):
+                dpg_markdown.add_text(tooltip, wrap=200)
                 
                 
             

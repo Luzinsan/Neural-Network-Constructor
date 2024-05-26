@@ -10,8 +10,8 @@ import torchvision.datasets as ds # type: ignore
 from torchvision.transforms import v2 # type: ignore
 
 
-Module: NamedTuple = namedtuple('Module', ['generator', 'func', 'params', 'default_params','tooltip','details','image'], 
-                                defaults=(None, None, None, None, None, None, None))
+Module: NamedTuple = namedtuple('Module', ['generator', 'func', 'params', 'default_params','popup','details','image', 'tooltip'], 
+                                defaults=(None, None, None, None, None, None, None, None))
 modules: DefaultDict[str, NamedTuple] = defaultdict(lambda: Module("Not present"))
 
 _dtypes = {'float32': v2.ToDtype(torch.float32, scale=True), 
@@ -35,22 +35,22 @@ transforms_setting_img = {"label":"Transform", "type":'collaps', "items":transfo
 
 params = {
     "img_transforms": transforms_setting_img,
-    "batch_size" :   {"label":"batch_size", "type":'int', "default_value":64},
+    "batch_size" :   {"label":"batch_size", "type":'int', "default_value":64, "tooltip": "__Батчи/Пакеты/сеты/партии__ - это набор объектов тренировочного датасета, который пропускается итеративно через сеть во время обучения\n___\n1 < batch_size < full_size"},
     "val_size":     {"label":"val_size", "type":'float', 
                      "max_value": 0.9999999, "max_clamped":True, "default_value":0.2},
     "button_load":  {"label":"Load Dataset", "type":"path", "default_value":"/home/luzinsan/Environments/petrol/data/"},
     "default_train":{'Loss':'L1 Loss','Optimizer':'SGD'},
-    "out_features": {"label":"out_features", "type":'int', "default_value":1},
-    "out_channels": {"label":"out_channels", "type":'int', "default_value":6},
+    "out_features": {"label":"out_features", "type":'int', "default_value":1, "tooltip":"Количество признаков на выходе линейной трансформации.\nКоличество признаков на входе определяется автоматически"},
+    "out_channels": {"label":"out_channels", "type":'int', "default_value":6, "tooltip":"Количество выходных каналов/признаковых карт, которые являются репрезентациями для последующих слоёв (рецептивное поле)"},
     "num_features": {"label":"num_features", "type":'int', "default_value":6},
-    "output_size":{"label":"output_size", "type":'text/tuple', "default_value":'[1, 2]'},
-    "kernel_size":{"label":"kernel_size", "type":'int', "default_value":5},
-    "stride":{"label":"stride", "type":'int', "default_value":1},
-    "padding":{"label":"padding", "type":'int', "default_value":2},
+    "output_size":{"label":"output_size", "type":'text/tuple', "default_value":'[1, 2]', 'tooltip':"Целевой выходной размер изображения формы HxW. Может быть списком [H, W] или одним H (для квадратного изображения HxH).\nH и W могут быть либо int , либо None. None означает, что размер будет таким же, как и у входных данных."},
+    "kernel_size":{"label":"kernel_size", "type":'int', "default_value":5, 'tooltip':"Размер тензорного ядра"},
+    "stride":{"label":"stride", "type":'int', "default_value":1, 'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"},
+    "padding":{"label":"padding", "type":'int', "default_value":2, 'tooltip':"Размер заполнения краёв входной матрицы"},
     "eps":          {"label":"eps", "type":'float', "default_value":0.00001},
     "momentum":{"label":"momentum", "type":'float', "default_value":0.01},
     "affine":{"label":"affine", "type":'bool'},
-    "p":{"label":"p", "type":'float', "default_value":0.5},
+    "p":{"label":"p", "type":'float', "default_value":0.5, 'tooltip':"Вероятность обнуления элемента"},
 }
 
 default_params = {
@@ -62,7 +62,15 @@ modules.update({
 ####################################################################~~~ DATASETS ~~~####################################################################
     "FashionMNIST":       Module(dataset.DataNode.factory, ds.FashionMNIST, 
                                  (params['img_transforms'], params['batch_size']), 
-                                 fromkeys(default_params, ['Loss', 'Optimizer'])),
+                                 fromkeys(default_params, ['Loss', 'Optimizer']), image='./static/images/fashion-mnist.png', popup="""
+### Fashion-MNIST
+___
++ это набор изображений, предоставленный [Zalando](https://arxiv.org/pdf/1708.07747)
++ состоит из обучающего набора из 60 000 примеров и тестового набора из 10 000 примеров. 
++ Каждый пример представляет собой изображение в оттенках серого размером 28x28
++ Представлено 10 классов
+_На изображении каждый класс представлен в трёх строках_
+                            """),
     "Caltech101":       Module(dataset.DataNode.factory, ds.Caltech101, 
                                (params['img_transforms'], params['batch_size']), fromkeys(default_params, ['Loss', 'Optimizer'])),
     "Caltech256":       Module(dataset.DataNode.factory, ds.Caltech256, 
@@ -95,7 +103,7 @@ modules.update({
                                       (params['val_size'], params['button_load']), fromkeys(default_params, ['Loss', 'Optimizer'])),
 
 ######################################################################~~~ LINEARS ~~~#######################################################################
-    "LazyLinear":       Module(layer.LayerNode.factory, nn.LazyLinear, (params['out_features'],), image="./static/images/linear_layer.png", tooltip=
+    "LazyLinear":       Module(layer.LayerNode.factory, nn.LazyLinear, (params['out_features'],), image="./static/images/linear_layer.png", popup=
                                """
 Линейный слой 
 ___
@@ -105,20 +113,20 @@ _Другие названия: полносвязный или плотный (
     "LazyBatchNorm1d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm1d, (params['eps'], params['momentum'], params['affine'])),
     "LazyBatchNorm2d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm2d, (params['eps'], params['momentum'], params['affine'])),
     "LazyBatchNorm3d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm3d, (params['eps'], params['momentum'], params['affine'])),
-    "LazyConv1d":       Module(layer.LayerNode.factory, nn.LazyConv1d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding'])),
-    "LazyConv2d":       Module(layer.LayerNode.factory, nn.LazyConv2d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding'])),
-    "LazyConv3d":       Module(layer.LayerNode.factory, nn.LazyConv3d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding'])),
+    "LazyConv1d":       Module(layer.LayerNode.factory, nn.LazyConv1d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет одномерную свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
+    "LazyConv2d":       Module(layer.LayerNode.factory, nn.LazyConv2d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет 2D-свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
+    "LazyConv3d":       Module(layer.LayerNode.factory, nn.LazyConv3d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет 3D-свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
     "BatchNorm1d":      Module(layer.LayerNode.factory, nn.BatchNorm1d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "BatchNorm2d":      Module(layer.LayerNode.factory, nn.BatchNorm2d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "BatchNorm3d":      Module(layer.LayerNode.factory, nn.BatchNorm3d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "Flatten":          Module(layer.LayerNode.factory, nn.Flatten),
     "AvgPool2d":        Module(layer.LayerNode.factory, nn.AvgPool2d, (params['kernel_size'], params['stride'])),
     "MaxPool2d":        Module(layer.LayerNode.factory, nn.MaxPool2d, (params['kernel_size'], params['stride'])),
-    "AdaptiveAvgPool2d":Module(layer.LayerNode.factory, nn.AdaptiveAvgPool2d, (params['output_size'], )),
-    "Dropout":          Module(layer.LayerNode.factory, nn.Dropout, (params['p'], )),
+    "AdaptiveAvgPool2d":Module(layer.LayerNode.factory, nn.AdaptiveAvgPool2d, (params['output_size'], ), tooltip="Применяет двумерное адаптивное усреднение к входному сигналу, состоящему из нескольких входных плоскостей"),
+    "Dropout":          Module(layer.LayerNode.factory, nn.Dropout, (params['p'], ), tooltip="__Метод регуляризации и предотвращения совместной адаптации нейронов__\nВо время обучения случайным образом обнуляет некоторые элементы входного тензора.\nЭлементы выбираются независимо во время каждого прямого прохода (feed-forward) из распределения Бернулли. "),
 
 #####################################################################~~~ ACTIVATIONS ~~~#####################################################################
-    "ReLU":             Module(layer.LayerNode.factory, nn.ReLU, image='./static/images/ReLU.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", tooltip=
+    "ReLU":             Module(layer.LayerNode.factory, nn.ReLU, image='./static/images/ReLU.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", popup=
                                """
 ### Rectified Linear Unit
 ___
@@ -127,7 +135,7 @@ ___
 + Кусочно-линейная функция
 + Решает проблему затухающего градиента
                                """),
-    "Sigmoid":          Module(layer.LayerNode.factory, nn.Sigmoid, image='./static/images/sigmoid.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", tooltip=
+    "Sigmoid":          Module(layer.LayerNode.factory, nn.Sigmoid, image='./static/images/sigmoid.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", popup=
                                """
 ### Сигмоидная функция активации
 ___
@@ -136,7 +144,7 @@ ___
 + Градиент функции обращается в нуль при больших положительных и отрицательных значениях аргументов, что является проблемой затухающего градиента
 + Полезна в рекуррентных сетях
                                """),
-    "Tanh":             Module(layer.LayerNode.factory, nn.Tanh, image='./static/images/tanh.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", tooltip=
+    "Tanh":             Module(layer.LayerNode.factory, nn.Tanh, image='./static/images/tanh.png', details="__Функция активации__ (activation function) - нелинейное преобразование, поэлементно применяющееся к пришедшим на вход данным. Благодаря функциям активации нейронные сети способны порождать более информативные признаковые описания, преобразуя данные нелинейным образом.", popup=
                                """
 ### Гиперболический тангенс
 ___
@@ -147,7 +155,7 @@ ___
                                """),
     
 ####################################################################~~~ ARCHITECTURES ~~~####################################################################
-    "LeNet5":           Module(layer.ModuleNode.factory, image='./static/images/lenet.png', details="Базовыми единицами в каждом сверточном блоке являются сверточный слой, сигмоидальная функция активации и последующая операция объединения усреднений. Обратите внимание, что, хотя ReLU и max-pooling работают лучше, они еще не были обнаружены. Каждый сверточный слой использует ядро 5x5 и сигмоидальную функцию активации. Эти слои сопоставляют пространственно упорядоченные входные данные с несколькими двумерными картами объектов, обычно увеличивая количество каналов. Первый сверточный слой имеет 6 выходных каналов, а второй - 16. Каждая 2x2 операция объединения в пул (stride/шаг=2) уменьшает размерность в 4 раза, понижая пространственную дискретизацию. Сверточный блок выдает объект, размерностью (размер пакета, номер канала, высота, ширина).", tooltip=
+    "LeNet5":           Module(layer.ModuleNode.factory, image='./static/images/lenet.png', details="Базовыми единицами в каждом сверточном блоке являются сверточный слой, сигмоидальная функция активации и последующая операция объединения усреднений. Обратите внимание, что, хотя ReLU и max-pooling работают лучше, они еще не были обнаружены. Каждый сверточный слой использует ядро 5x5 и сигмоидальную функцию активации. Эти слои сопоставляют пространственно упорядоченные входные данные с несколькими двумерными картами объектов, обычно увеличивая количество каналов. Первый сверточный слой имеет 6 выходных каналов, а второй - 16. Каждая 2x2 операция объединения в пул (stride/шаг=2) уменьшает размерность в 4 раза, понижая пространственную дискретизацию. Сверточный блок выдает объект, размерностью (размер пакета, номер канала, высота, ширина).", popup=
                                """
 ### Свёрточная нейросеть
 ___
@@ -162,7 +170,7 @@ ___
 + 3 полносвязных слоя (out_features: 120 | 84 | 10 _(кол-во классов)_)
 + Без модификаций принимает изображения размером [28, 28]
                                """), 
-    "AlexNet":          Module(layer.ModuleNode.factory, image='./static/images/alexnet.png', details="Вплоть до 2012 года самой важной частью конвейера было репрезентативность, которая рассчитывалась в основном механически. К тому же, разработка нового набора признаков (feature engineering), улучшение результатов и описание метода - все это занимало видное место в статьях: SIFT [Lowe, 2004](https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf), SURF [Bay et al., 2006](https://people.ee.ethz.ch/~surf/eccv06.pdf), HOG (гистограммы ориентированного градиента) [Dalal and Triggs, 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf), наборы визуальных слов [Sivic and Zisserman, 2003](https://www.robots.ox.ac.uk/~vgg/publications/2003/Sivic03/sivic03.pdf) и аналогичные экстракторы признаков. На самых нижних уровнях сети модель изучает элементарные признаки, которые напоминали некоторые традиционные фильтры. Более высокие слои сети могут опираться на эти представления для представления более крупных структур, таких как глаза, носы, травинки и так далее. Еще более высокие слои могут представлять целые объекты, такие как люди, самолеты, собаки или фрисби. В итоге, конечное скрытое состояние изучает компактное представление изображения, которое суммирует его содержимое таким образом, что данные, принадлежащие к различным категориям, могут быть легко разделены.", tooltip=
+    "AlexNet":          Module(layer.ModuleNode.factory, image='./static/images/alexnet.png', details="Вплоть до 2012 года самой важной частью конвейера было репрезентативность, которая рассчитывалась в основном механически. К тому же, разработка нового набора признаков (feature engineering), улучшение результатов и описание метода - все это занимало видное место в статьях: SIFT [Lowe, 2004](https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf), SURF [Bay et al., 2006](https://people.ee.ethz.ch/~surf/eccv06.pdf), HOG (гистограммы ориентированного градиента) [Dalal and Triggs, 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf), наборы визуальных слов [Sivic and Zisserman, 2003](https://www.robots.ox.ac.uk/~vgg/publications/2003/Sivic03/sivic03.pdf) и аналогичные экстракторы признаков. На самых нижних уровнях сети модель изучает элементарные признаки, которые напоминали некоторые традиционные фильтры. Более высокие слои сети могут опираться на эти представления для представления более крупных структур, таких как глаза, носы, травинки и так далее. Еще более высокие слои могут представлять целые объекты, такие как люди, самолеты, собаки или фрисби. В итоге, конечное скрытое состояние изучает компактное представление изображения, которое суммирует его содержимое таким образом, что данные, принадлежащие к различным категориям, могут быть легко разделены.", popup=
                                """
 ### Глубокая сверточная нейросеть
 ___
@@ -178,7 +186,7 @@ ___
 * 3 полносвязных слоя (out_features: 4096 | 84 | 10 _(кол-во классов)_) _(Осторожно: требуется почти 1 ГБ параметров модели)_
 + Без модификаций принимает изображения размером [224, 224]
                         """),
-    "VGG-11":              Module(layer.ModuleNode.factory, image='./static/images/vgg.png', details="VGG противоречит заложенным в LeNet принципам, согласно которым большие свёртки использовались для извлечения одинаковых свойств изображения. Вместо применяемых в AlexNet фильтров 9х9 и 11х11 стали применять гораздо более мелкие фильтры, опасно близкие к свёрткам 1х1, которых старались избежать авторы LeNet, по крайней мере в первых слоях сети. Но большим преимуществом VGG стала находка, что несколько свёрток 3х3, объединённых в последовательность, могут эмулировать более крупные рецептивные поля, например, 5х5 или 7х7. \nСети VGG для представления сложных признаков используют многочисленные свёрточные слои 3x3. \n__Примечательно__: в [VGG-E](https://arxiv.org/pdf/1409.1556#page=3&zoom=160,-97,717) в блоках 3, 4 и 5 для извлечения более сложных свойств и их комбинирования применяются последовательности 256×256 и 512×512 фильтров 3×3. Это равносильно большим свёрточным классификаторам 512х512 с тремя слоями! Это даёт нам огромное количество параметров и прекрасные способности к обучению. Но учить такие сети было сложно, приходилось разбивать их на более мелкие, добавляя слои один за другим. Причина заключалась в отсутствии эффективных способов регуляризации моделей или каких-то методов ограничения большого пространства поиска, которому способствует множество параметров.", tooltip=
+    "VGG-11":              Module(layer.ModuleNode.factory, image='./static/images/vgg.png', details="VGG противоречит заложенным в LeNet принципам, согласно которым большие свёртки использовались для извлечения одинаковых свойств изображения. Вместо применяемых в AlexNet фильтров 9х9 и 11х11 стали применять гораздо более мелкие фильтры, опасно близкие к свёрткам 1х1, которых старались избежать авторы LeNet, по крайней мере в первых слоях сети. Но большим преимуществом VGG стала находка, что несколько свёрток 3х3, объединённых в последовательность, могут эмулировать более крупные рецептивные поля, например, 5х5 или 7х7. \nСети VGG для представления сложных признаков используют многочисленные свёрточные слои 3x3. \n__Примечательно__: в [VGG-E](https://arxiv.org/pdf/1409.1556#page=3&zoom=160,-97,717) в блоках 3, 4 и 5 для извлечения более сложных свойств и их комбинирования применяются последовательности 256×256 и 512×512 фильтров 3×3. Это равносильно большим свёрточным классификаторам 512х512 с тремя слоями! Это даёт нам огромное количество параметров и прекрасные способности к обучению. Но учить такие сети было сложно, приходилось разбивать их на более мелкие, добавляя слои один за другим. Причина заключалась в отсутствии эффективных способов регуляризации моделей или каких-то методов ограничения большого пространства поиска, которому способствует множество параметров.", popup=
                                   """
 ### Блочная свёрточная нейросеть
 ___
@@ -193,7 +201,7 @@ ___
 + 3 полносвязных слоя (out_features: 120 | 84 | 10 _(кол-во классов)_) со слоями отбрасывания (Dropout, p=0.5)
 + Без модификаций принимает изображения размером [224, 224]
                                """),
-    "Conv-MLP":              Module(layer.ModuleNode.factory, tooltip=
+    "Conv-MLP":              Module(layer.ModuleNode.factory, popup=
                                     """
 ### Многослойный перцептрон со свёрточными слоями
 ___
@@ -202,7 +210,7 @@ ___
 + 3 свёрточных слоя (out_channels: 96 | 96 | 96, kernel_size: 11 | 1 | 1, stride: 4 | 1 | 1, padding=0)
 + ReLU функции активации после каждого свёрточного слоя
                                """),
-    "NiN":          Module(layer.ModuleNode.factory, image='./static/images/NiN.png', details="NiN были предложены на основе очень простого понимания: \n1. использовать 1x1 свертки для добавления локальных нелинейностей по активациям каналов и\n2. использовать глобальный средний пул для интеграции по всем местоположениям в последнем слое представления. _Причём глобальное среднее объединение не было бы эффективным, если бы не дополнительные нелинейности_", tooltip=
+    "NiN":          Module(layer.ModuleNode.factory, image='./static/images/NiN.png', details="NiN были предложены на основе очень простого понимания: \n1. использовать 1x1 свертки для добавления локальных нелинейностей по активациям каналов и\n2. использовать глобальный средний пул для интеграции по всем местоположениям в последнем слое представления. _Причём глобальное среднее объединение не было бы эффективным, если бы не дополнительные нелинейности_", popup=
                                """                    
 ### Архитектура NiN
 ___

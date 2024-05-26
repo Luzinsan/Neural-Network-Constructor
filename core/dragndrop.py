@@ -46,6 +46,7 @@ class DragSource():
         self._generator = dicts.modules[label].generator
         self._params = dicts.modules[label].params
         self._default_params = dicts.modules[label].default_params
+        self._popup: str = dicts.modules[label].popup
         self._tooltip: str = dicts.modules[label].tooltip
         self._details: str = dicts.modules[label].details
         self._image: str = dicts.modules[label].image

@@ -3,6 +3,7 @@ import dearpygui.dearpygui as dpg
 from core.utils import select_path
 from torchvision.transforms import v2 # type: ignore
 from config.settings import Configs, BaseGUI
+import external.DearPyGui_Markdown as dpg_markdown
 from typing import Optional, Union
 
 
@@ -43,6 +44,7 @@ class ParamNode(BaseGUI):
             
     def _submit_in_container(self, parent, inner_type=None):
         match_type = inner_type if inner_type else self._type
+        tooltip = self._params.pop('tooltip', None)
         match match_type:
             case 'int':
                 dpg.add_input_int(**self._params, label=self._label, min_value=1, min_clamped=True, step=2, tag=self.uuid, parent=parent)
@@ -81,6 +83,9 @@ class ParamNode(BaseGUI):
                 with dpg.group(horizontal=True, parent=parent):
                     dpg.add_input_text(**self._params, width=150, no_spaces=True, tag=self.uuid)
                     dpg.add_button(label="Path", user_data=self.uuid, callback=select_path)
+        if tooltip:
+            with dpg.tooltip(dpg.last_item()):
+                dpg_markdown.add_text(tooltip, wrap=200)
     
     @staticmethod
     def submit_config(name, params, defaults, parent):
