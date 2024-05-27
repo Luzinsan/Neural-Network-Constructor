@@ -61,17 +61,24 @@ class ModuleNode(Node):
         self.pos: dict[str, int] = node_params.get('pos', {"x":0, "y":0})
 
     @staticmethod
+    def _replace(module, new_defaults, idx):
+        if len(module) > 1: # если указаны новые параметры по умолчанию для слоя
+            for key in module[1].keys():
+                if params := new_defaults.get(key):
+                    module[1][key] = params[idx]
+        
+
+    @staticmethod
     def replace_default_params(sequential: tuple[tuple[object, dict]], 
                                new_defaults: dict):
-        idx = 0
         updated_sequential = deepcopy(sequential)
         for i, layer_defaults in enumerate(updated_sequential):
-            if len(layer_defaults) > 1: # если указаны новые параметры по умолчанию для слоя
-                # params = item[1]
-                for key in layer_defaults[1].keys():
-                    if params := new_defaults.get(key):
-                        layer_defaults[1][key] = params[idx]
-                idx += 1
+            if isinstance(layer_defaults[0], tuple):
+                for idx_module,  module in enumerate(layer_defaults):
+                    ModuleNode._replace(module, new_defaults[i], idx_module)
+            else:
+                ModuleNode._replace(layer_defaults, new_defaults, i)
+            
         return updated_sequential
    
     def _submit_in_editor(self, editor, parent=None):
@@ -93,10 +100,10 @@ class ModuleNode(Node):
         NodeEditor.delete_in_editor(self._node_editor_uuid, self)
         dpg.configure_item(self.modal, show=True)
    
-    def submit_module(self, modal: int) -> tuple[list, dict, list]:
+    def submit_module(self, sequential, modal):
         all_sources = []
         all_params = []
-        for idx, node in enumerate(self.sequential):
+        for idx, node in enumerate(sequential):
             source: DragSource = node[0]
             if len(node)>1:
                 defaults = node[1].copy()
@@ -111,7 +118,7 @@ class ModuleNode(Node):
                             ModuleNode(source._label, 
                                        source._data,
                                        pos={'x':0, "y":self.pos['y'] + 200})\
-                                           .submit_module(submodule)
+                                           .submit_sequential(submodule)
                     all_sources += sources
                     all_params += source_params
                     continue
@@ -131,7 +138,24 @@ class ModuleNode(Node):
                           source._default_params, 
                           params))
                 )
+        return all_sources, self.pos, all_params
 
+    def submit_sequential(self, modal: int) -> tuple[list, dict, list]:
+        all_sources = []
+        all_params = []
+        for idx, branch in enumerate(self.sequential, 1):
+            
+            if isinstance(branch[0], tuple):
+                if len(self.sequential) > 1:
+                    modal = dpg.add_collapsing_header(label=f'Ветка #{idx}', default_open=False)
+                sources, _, source_params = self.submit_module(branch, modal)
+                all_sources += [sources]
+                all_params += [source_params]
+            else:
+                sources, _, source_params = self.submit_module(self.sequential, modal)
+                all_sources += sources
+                all_params += source_params
+                break
         return all_sources, self.pos, all_params
     
     def _collect_submit(self, all_sources, all_params, parent, modal, collapse_checkbox):
@@ -155,7 +179,7 @@ class ModuleNode(Node):
         with dpg.window(modal=True, pos=(500,0), label=f'Конфигурирование модуля {self._label}', min_size=(300, 500)) as modal:
             self.modal = modal
             with dpg.child_window(height=-50) as child_window:
-                all_sources, _, all_params = self.submit_module(child_window)
+                all_sources, _, all_params = self.submit_sequential(child_window)
             dpg.add_separator()
             collapse_checkbox = dpg.add_checkbox(label="Свернуть модель", default_value=True)
             dpg.add_button(label="Продолжить", callback=lambda:self._collect_submit(all_sources, all_params, parent, modal, collapse_checkbox))

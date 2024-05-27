@@ -101,20 +101,58 @@ class App:
                                  ),
             'Conv-MLP': DragSource("Conv-MLP",
                                 (
-                                    (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':11, 'stride':4,'padding':0, }),(layers['ReLU'], ),
-                                    (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], ),
-                                    (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], )
-                                ),
-                                 )
+                                    (
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':11, 'stride':4,'padding':0, }),(layers['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1, 'stride':1,'padding':0,  }),(layers['ReLU'], )
+                                    ),
+                                )),
+            
         }
         archs['NiN'] = DragSource("NiN",
                                 (
-                                    (archs['Conv-MLP'], {'out_channels':[96, 96, 96], 'kernel_size':[11,1,1], 'stride':[4, 1, 1],'padding':[0, 0, 0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
-                                    (archs['Conv-MLP'], {'out_channels':[256, 256, 256], 'kernel_size':[5,1,1], 'stride':[1, 1, 1],'padding':[2,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
-                                    (archs['Conv-MLP'], {'out_channels':[384, 384, 384], 'kernel_size':[3,1,1], 'stride':[1, 1, 1],'padding':[1,0,0]}),(layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], [{'out_channels':[96, None, 96, None, 96, None], 'kernel_size':[11, None, 1, None, 1], 'stride':[4, None,1,None, 1,None],'padding':[0,None,0,None,0,None]}]),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], [{'out_channels':[256, None, 256, None, 256, None], 'kernel_size':[5,None,1,None,1,None], 'stride':[1,None,1,None,1, None],'padding':[2,None,0,None,0,None]}]),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
+                                    (archs['Conv-MLP'], [{'out_channels':[384, None, 384, None, 384, None], 'kernel_size':[3,None,1,None,1,None], 'stride':[1,None,1,None,1, None],'padding':[1,None,0,None,0,None]}]),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2}),
                                     (layers['Dropout'], {'p':0.5}),
-                                    (archs['Conv-MLP'], {'out_channels':[10, 10, 10], 'kernel_size':[3,1,1], 'stride':[1,1,1],'padding':[1,0,0]}),
+                                    (archs['Conv-MLP'], [{'out_channels':[10, None, 10, None, 10, None], 'kernel_size':[3,None,1,None,1,None], 'stride':[1,None,1,None,1,None],'padding':[1,None,0,None,0,None]}]),
                                     (layers['AdaptiveAvgPool2d'], {'output_size':'[1, 1]'}),(layers['Flatten'],)
+                                ))
+        archs['Inception'] = DragSource("Inception",
+                                (
+                                    (   (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':1}),  ),
+                                    (
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1}), 
+                                        (layers['LazyConv2d'], {'out_channels':128, 'kernel_size':1, 'padding':1}), 
+                                    ),    
+                                    (
+                                        (layers['LazyConv2d'], {'out_channels':16, 'kernel_size':1}),
+                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':1, 'padding':2})
+                                    ),
+                                    (
+                                        (layers['MaxPool2d'], {'kernel_size':3, 'stride':1, "padding":1}),
+                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':1})
+                                    )
+                                ))
+        archs['GoogLeNet'] = DragSource("GoogLeNet",
+                                (
+                                    (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':7, 'stride':2, 'padding':3}), (layers['ReLU'], ),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
+                                    (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':1}), (layers['ReLU'], ),
+                                    (layers['LazyConv2d'], {'out_channels':192, 'kernel_size':3, 'padding':1}), (layers['ReLU'], ),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
+                                    (archs['Inception'], [{'out_channels': [64]}, 
+                                                          {'out_channels': [96, 128]}, 
+                                                          {'out_channels': [16, 32]}, 
+                                                          {'out_channels': [None, 32]}]),
+                                    (archs['Inception'], [{'out_channels': [128]}, 
+                                                          {'out_channels': [128, 192]}, 
+                                                          {'out_channels': [32, 96]}, 
+                                                          {'out_channels': [None, 64]}]),
+                                    (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
                                 ))
         self.archs_container = DragSourceContainer("Модули", 150, 0)
         self.archs_container.add_drag_source(archs.values())

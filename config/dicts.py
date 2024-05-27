@@ -41,12 +41,20 @@ params = {
     "button_load":  {"label":"Load Dataset", "type":"path", "default_value":"/home/luzinsan/Environments/petrol/data/"},
     "default_train":{'Loss':'L1 Loss','Optimizer':'SGD'},
     "out_features": {"label":"out_features", "type":'int', "default_value":1, "tooltip":"Количество признаков на выходе линейной трансформации.\nКоличество признаков на входе определяется автоматически"},
-    "out_channels": {"label":"out_channels", "type":'int', "default_value":6, "tooltip":"Количество выходных каналов/признаковых карт, которые являются репрезентациями для последующих слоёв (рецептивное поле)"},
+    "out_channels": {"label":"out_channels", "type":'int', "default_value":6, 
+                    #  "tooltip":"Количество выходных каналов/признаковых карт, которые являются репрезентациями для последующих слоёв (рецептивное поле)"
+                     },
     "num_features": {"label":"num_features", "type":'int', "default_value":6},
     "output_size":{"label":"output_size", "type":'text/tuple', "default_value":'[1, 2]', 'tooltip':"Целевой выходной размер изображения формы HxW. Может быть списком [H, W] или одним H (для квадратного изображения HxH).\nH и W могут быть либо int , либо None. None означает, что размер будет таким же, как и у входных данных."},
-    "kernel_size":{"label":"kernel_size", "type":'int', "default_value":5, 'tooltip':"Размер тензорного ядра"},
-    "stride":{"label":"stride", "type":'int', "default_value":1, 'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"},
-    "padding":{"label":"padding", "type":'int', "default_value":2, 'tooltip':"Размер заполнения краёв входной матрицы"},
+    "kernel_size":{"label":"kernel_size", "type":'int', "default_value":5, 
+                #    'tooltip':"Размер тензорного ядра"
+                   },
+    "stride":{"label":"stride", "type":'int', "default_value":1, 
+            #   'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"
+              },
+    "padding":{"label":"padding", "type":'int', "default_value":2, 
+            #    'tooltip':"Размер заполнения краёв входной матрицы"
+               },
     "eps":          {"label":"eps", "type":'float', "default_value":0.00001},
     "momentum":{"label":"momentum", "type":'float', "default_value":0.01},
     "affine":{"label":"affine", "type":'bool'},
@@ -219,6 +227,8 @@ ___
 + Содержит модули Conv-MLP
 + MLP позволяют сильно повысить эффективность отдельных свёрточных слоёв посредством их комбинирования в более сложные группы.
 + Совершенно не использует полносвязные слои, что кратно уменьшает кол-во параметров, однако потенциально увеличивает время обучения
-                               """)
+                               """),
+     "Inception":          Module(layer.ModuleNode.factory),
+     "GoogLeNet":          Module(layer.ModuleNode.factory),
 })
 

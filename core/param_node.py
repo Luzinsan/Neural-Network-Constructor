@@ -57,7 +57,7 @@ class ParamNode(BaseGUI):
             case 'collaps':
                 with dpg.child_window(width=250, height=80, parent=parent):
                     self.checkboxes_uuids = []
-                    with dpg.collapsing_header(label=self._label, default_open=True, tag=self.uuid):
+                    with dpg.collapsing_header(label=self._label, default_open=False, tag=self.uuid):
                         for item in self._params['items']:
                             self.checkboxes_uuids.append(ParamNode(**item)\
                                 ._submit_in_container(self.uuid, 'bool'))     
@@ -95,7 +95,7 @@ class ParamNode(BaseGUI):
                 if (label := param['label']) in defaults.keys():
                     param['default_value'] = defaults[label]
             source_params = [ParamNode(**param) for param in params]
-            with dpg.collapsing_header(parent=parent, label=name, default_open=True) as submodule:
+            with dpg.collapsing_header(parent=parent, label=name, default_open=False) as submodule:
                 for attribute in source_params:
                     attribute._submit_in_container(submodule)
         else:
