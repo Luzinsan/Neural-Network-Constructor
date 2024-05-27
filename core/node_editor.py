@@ -110,7 +110,8 @@ class NodeEditor(BaseGUI):
             with dpg.node_editor(callback=LinkNode._link_callback,
                                  delink_callback=LinkNode._delink_callback,
                                  tag=self.uuid, 
-                                 width=-1, height=-1):
+                                 width=-1, height=-1,
+                                 minimap=True, minimap_location=dpg.mvNodeMiniMap_Location_BottomRight):
                 for node in self.__nodes:
                     node._submit(self.uuid)
                 with dpg.handler_registry():

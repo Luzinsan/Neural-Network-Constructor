@@ -80,17 +80,45 @@ class ModuleNode(Node):
                 ModuleNode._replace(layer_defaults, new_defaults, i)
             
         return updated_sequential
-   
+
+
     def _submit_in_editor(self, editor, parent=None):
        
         if not hasattr(self, '_node_editor_uuid') and (parent==None):
             raise RuntimeError("id node_editor не определен")
         if not hasattr(self, '_node_editor_uuid'): self._node_editor_uuid = parent
         
+        prev_node = None
+        lasts_in_branch = []
         for node in self._data:
-            editor.add_node(node)
-            node._submit(self._node_editor_uuid)
-        LinkNode.link_nodes(self._data, self._node_editor_uuid)
+            if isinstance(node, list):
+                flag = False
+                for branch in node:
+                    if isinstance(branch, list):
+                        for module in branch:
+                            editor.add_node(module)
+                            module._submit(self._node_editor_uuid)
+                        lasts_in_branch.append(branch[-1])
+                        if prev_node: branch.insert(0, prev_node)
+                        LinkNode.link_nodes(branch, self._node_editor_uuid) 
+                    else:
+                        flag = True
+                        editor.add_node(branch)
+                        branch._submit(self._node_editor_uuid)
+                if flag:
+                    lasts_in_branch.append(node[-1])
+                    if prev_node: node.insert(0, prev_node)
+                    LinkNode.link_nodes(node, self._node_editor_uuid)
+            else:
+                editor.add_node(node)
+                node._submit(self._node_editor_uuid)
+                if len(lasts_in_branch):
+                    for last in lasts_in_branch:
+                        LinkNode._link_nodes(last, node, self._node_editor_uuid)
+                    lasts_in_branch = []
+                elif prev_node: LinkNode._link_nodes(prev_node, node, self._node_editor_uuid)
+                prev_node = node
+       
      
     def expand(self) -> None:
         editor = NodeEditor.delete_in_editor(self._node_editor_uuid, self)
@@ -105,6 +133,7 @@ class ModuleNode(Node):
         all_params = []
         for idx, node in enumerate(sequential):
             source: DragSource = node[0]
+            defaults = None
             if len(node)>1:
                 defaults = node[1].copy()
                 if source._generator.__qualname__ == 'ModuleNode.factory':
@@ -117,17 +146,17 @@ class ModuleNode(Node):
                         sources, self.pos, source_params = \
                             ModuleNode(source._label, 
                                        source._data,
-                                       pos={'x':0, "y":self.pos['y'] + 200})\
+                                       pos={'x':0, "y":self.pos['y'] + 150})\
                                            .submit_sequential(submodule)
-                    all_sources += sources
-                    all_params += source_params
+                    all_sources.append(sources)
+                    all_params.append(source_params)
                     continue
             all_params.append(
                 ParamNode.submit_config(source._label, 
                                         source._params, 
                                         defaults, 
                                         modal))
-            self.pos['x'] += 200
+            self.pos['x'] += 300
             params = {"pos":(self.pos['x'], self.pos['y'])}
 
             all_sources.append(
@@ -141,32 +170,47 @@ class ModuleNode(Node):
         return all_sources, self.pos, all_params
 
     def submit_sequential(self, modal: int) -> tuple[list, dict, list]:
+        if not isinstance(self.sequential[0][0], tuple):
+            return self.submit_module(self.sequential, modal)
+        
         all_sources = []
         all_params = []
+
+        is_branch = len(self.sequential) > 1
+
         for idx, branch in enumerate(self.sequential, 1):
-            
-            if isinstance(branch[0], tuple):
-                if len(self.sequential) > 1:
-                    modal = dpg.add_collapsing_header(label=f'Ветка #{idx}', default_open=False)
-                sources, _, source_params = self.submit_module(branch, modal)
-                all_sources += [sources]
-                all_params += [source_params]
-            else:
-                sources, _, source_params = self.submit_module(self.sequential, modal)
-                all_sources += sources
-                all_params += source_params
-                break
+            if is_branch:
+                modal = dpg.add_collapsing_header(label=f'Ветка #{idx}', default_open=False)
+                self.pos['x'] = 0
+                self.pos['y'] += 200
+                
+            sources, _, source_params = self.submit_module(branch, modal)
+            all_sources.append(sources)
+            all_params.append(source_params)
+            self.pos['x'] += self.pos['x'] / 2
         return all_sources, self.pos, all_params
     
+    @staticmethod
+    def _collect(sources, params):
+        if params:
+            for param, origin_param in zip(params, sources[3]):
+                returned = param.get_value()
+                if returned and ((value := returned.get(origin_param['label'], None)) is not None):
+                    origin_param['default_value'] = value   
+
+    def recursive_collect(self, sources, params, editor):
+        if isinstance(sources, list) and isinstance(params, list):
+            multi_source = []
+            for source, param in zip(sources, params):
+                multi_source.append(self.recursive_collect(source, param, editor))
+            return multi_source
+        ModuleNode._collect(sources, params)
+        return editor.on_drop(None, sources, None, module=True)
+
     def _collect_submit(self, all_sources, all_params, parent, modal, collapse_checkbox):
-        for idx, source in enumerate(all_sources):
-            if all_params[idx]:
-                for param, origin_param in zip(all_params[idx], source[3]):
-                    returned = param.get_value()
-                    if returned and ((value := returned.get(origin_param['label'], None)) is not None):
-                        origin_param['default_value'] = value      
         editor: NodeEditor = dpg.get_item_user_data(dpg.get_item_parent(parent))
-        self._data = [editor.on_drop(None, source, None, module=True) for source in all_sources]
+        self._data = self.recursive_collect(all_sources, all_params, editor)
+        
         if dpg.get_value(collapse_checkbox):
             super()._submit(parent)
             editor.add_node(self)

@@ -91,9 +91,10 @@ class ParamNode(BaseGUI):
     def submit_config(name, params, defaults, parent):
         source_params = None
         if params:
-            for param in params:
-                if (label := param['label']) in defaults.keys():
-                    param['default_value'] = defaults[label]
+            if defaults:
+                for param in params:
+                    if (label := param['label']) in defaults.keys():
+                        param['default_value'] = defaults[label]
             source_params = [ParamNode(**param) for param in params]
             with dpg.collapsing_header(parent=parent, label=name, default_open=False) as submodule:
                 for attribute in source_params:

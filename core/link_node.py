@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
+from core.node import Node
 from config.settings import BaseGUI
 
 
@@ -38,9 +39,18 @@ class LinkNode(BaseGUI):
         dpg.delete_item(link_uuid)
         del link
         
+    
+    @staticmethod
+    def _link_nodes(left_node, right_node, editor_uuid):
+        first = left_node._output_attributes[0]
+        sec = right_node._input_attributes[0]
+        LinkNode._link_callback(editor_uuid, (first.uuid, sec.uuid))
+    
+
     @staticmethod
     def link_nodes(nodes, editor_uuid):
         for inx in range(len(nodes) - 1):
-            first = nodes[inx]._output_attributes[0]
-            sec = nodes[inx + 1]._input_attributes[0]
-            LinkNode._link_callback(editor_uuid, (first.uuid, sec.uuid))
+            LinkNode._link_nodes(nodes[inx], nodes[inx + 1], editor_uuid)
+    
+   
+    

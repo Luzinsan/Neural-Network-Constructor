@@ -42,7 +42,7 @@ class App:
             in ["LazyLinear","LazyBatchNorm1d","LazyBatchNorm2d","LazyBatchNorm3d",
                 "LazyConv1d","LazyConv2d","LazyConv3d",
                 "BatchNorm1d","BatchNorm2d","BatchNorm3d",
-                "Flatten","AvgPool2d","MaxPool2d","AdaptiveAvgPool2d",
+                "Flatten","Concatenate","AvgPool2d","MaxPool2d","AdaptiveAvgPool2d",
                 "Dropout","ReLU","Sigmoid","Tanh",]
          }
         self.layer_container = DragSourceContainer("Слои|ф.активации", 150, 0)
@@ -148,10 +148,12 @@ class App:
                                                           {'out_channels': [96, 128]}, 
                                                           {'out_channels': [16, 32]}, 
                                                           {'out_channels': [None, 32]}]),
+                                    (layers['Concatenate'], ),
                                     (archs['Inception'], [{'out_channels': [128]}, 
                                                           {'out_channels': [128, 192]}, 
                                                           {'out_channels': [32, 96]}, 
                                                           {'out_channels': [None, 64]}]),
+                                    (layers['Concatenate'], ),
                                     (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
                                 ))
         self.archs_container = DragSourceContainer("Модули", 150, 0)

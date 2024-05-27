@@ -59,6 +59,7 @@ params = {
     "momentum":{"label":"momentum", "type":'float', "default_value":0.01},
     "affine":{"label":"affine", "type":'bool'},
     "p":{"label":"p", "type":'float', "default_value":0.5, 'tooltip':"Вероятность обнуления элемента"},
+    "dim":{"label":"dim", "type":'int', "default_value":1, 'tooltip':"Рассматриваемое измерение"},
 }
 
 default_params = {
@@ -128,6 +129,7 @@ _Другие названия: полносвязный или плотный (
     "BatchNorm2d":      Module(layer.LayerNode.factory, nn.BatchNorm2d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "BatchNorm3d":      Module(layer.LayerNode.factory, nn.BatchNorm3d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "Flatten":          Module(layer.LayerNode.factory, nn.Flatten),
+    "Concatenate":      Module(layer.LayerNode.factory, torch.concatenate, (params['dim'], )),
     "AvgPool2d":        Module(layer.LayerNode.factory, nn.AvgPool2d, (params['kernel_size'], params['stride'])),
     "MaxPool2d":        Module(layer.LayerNode.factory, nn.MaxPool2d, (params['kernel_size'], params['stride'])),
     "AdaptiveAvgPool2d":Module(layer.LayerNode.factory, nn.AdaptiveAvgPool2d, (params['output_size'], ), tooltip="Применяет двумерное адаптивное усреднение к входному сигналу, состоящему из нескольких входных плоскостей"),
