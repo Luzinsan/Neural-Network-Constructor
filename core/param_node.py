@@ -85,7 +85,7 @@ class ParamNode(BaseGUI):
                     dpg.add_button(label="Path", user_data=self.uuid, callback=select_path)
         if tooltip:
             with dpg.tooltip(dpg.last_item()):
-                dpg_markdown.add_text(tooltip, wrap=200)
+                dpg_markdown.add_text(tooltip, wrap=300)
     
     @staticmethod
     def submit_config(name, params, defaults, parent):

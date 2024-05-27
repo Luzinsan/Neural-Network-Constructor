@@ -177,6 +177,16 @@ class App:
                 # right panel
                 with dpg.group(tag=self.right_panel):
                     self.archs_container.submit(self.right_panel) 
+
+
+            def on_key_la(sender, app_data):
+                if dpg.is_key_released(dpg.mvKey_S):
+                    self.node_editor.callback_file(self.node_editor.save)
+                if dpg.is_key_released(dpg.mvKey_O):
+                    self.node_editor.callback_file(self.node_editor.open)
+
+            with dpg.handler_registry():
+                dpg.add_key_press_handler(dpg.mvKey_Control, callback=on_key_la)
                     
                               
         dpg.set_primary_window(main_window, True)

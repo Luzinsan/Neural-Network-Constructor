@@ -32,7 +32,7 @@ class Pipeline:
         send_message("Инициализация сети", 'log') 
         try:
             self.net = Module(sequential=nn.Sequential(*self.pipeline), optimizer=self.train_params['Optimizer'],
-                              lr=self.train_params['Learning Rate'], loss_func=self.train_params['Loss'])
+                              lr=self.train_params['Скорость обучения'], loss_func=self.train_params['Функция потерь'])
             self.net.apply_init(self.dataset, self.train_params['Initialization'])
             send_message(self.net, 'code', 'Инициализированная сеть') 
             self.net.layer_summary((1,1,*self.dataset.shape)) if Pipeline.debug else None
@@ -41,8 +41,8 @@ class Pipeline:
             raise err
         
         self.task: clearml.Task = clearml.Task.init(
-                    project_name=self.train_params["Project name"],
-                    task_name=self.train_params["Task name"],
+                    project_name=self.train_params["Название проекта"],
+                    task_name=self.train_params["Название задачи"],
                     continue_last_task=True)
         self.task.connect(self.train_params)
         send_message(f'[ClearML]({self.task.get_output_log_web_page()})', 
@@ -111,7 +111,7 @@ class Pipeline:
             node = next_node
         
     def train(self):
-        try: self.trainer = Trainer(max_epochs=self.train_params['Max Epoches'], accelerator='gpu')
+        try: self.trainer = Trainer(max_epochs=self.train_params['Эпохи'], accelerator='gpu')
         except (BaseException, RuntimeError) as err: 
             send_message(err, 'error', "Ошибка инициализации тренировочного класса")
             raise err

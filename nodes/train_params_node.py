@@ -11,6 +11,7 @@ from core import utils
 
 from app.pipeline import Pipeline
 from nodes import dataset
+import dearpygui.dearpygui as dpg
 
 
 
@@ -20,14 +21,15 @@ class TrainParamsNode(Node):
     WIDTH=150
     __params: dict[str, dict[str, Any]] = dict(
         Loss= 
-            {"MSE (squared L2)": nn.MSELoss, 
-            "Cross Entropy Loss": F.cross_entropy, 
-            "L1 Loss": nn.L1Loss},
+            {"MSE": nn.MSELoss, 
+            "Cross Entropy": F.cross_entropy, 
+            "L1": nn.L1Loss},
         Optimizer=
             {"SGD":torch.optim.SGD, 
             "Adam":torch.optim.Adam, 
-            "Adadelta":torch.optim.Adadelta, 
-            "Adamax":torch.optim.Adamax},
+            "RMSprop":torch.optim.RMSprop,
+            "Adagrad":torch.optim.Adagrad
+            },
         Initialization=
             {'Default':None, 
             'Normal': utils.init_normal, 
@@ -51,27 +53,43 @@ class TrainParamsNode(Node):
             return default_params.get(value, list(TrainParamsNode.__params[value].keys())[0])
         
         train_params: list[dict[str, object]] = [
-            {"label":"Project name", "type":'text', "default_value":default_params.get('Project name','DLC'), "width":TrainParamsNode.WIDTH},
-            {"label":"Task name", "type":'text', "default_value":default_params.get('Task name', data_node._label), "width":TrainParamsNode.WIDTH},
+            {"label":"Название проекта", "type":'text', "default_value":default_params.get('Название проекта','DLC'), "width":TrainParamsNode.WIDTH},
+            {"label":"Название задачи", "type":'text', "default_value":default_params.get('Название задачи', data_node._label), "width":TrainParamsNode.WIDTH},
             {
-                "label":"Loss", "type":'combo', "default_value":get_default('Loss'), 
+                "label":"Функция потерь", "type":'combo', "default_value":get_default('Loss'), 'tooltip':"""
+### Функция потерь
+___
++ MSE - критерий, который измеряет среднеквадратичную ошибку (квадрат нормы L2) между каждым элементом во входном x и целевом y
++ Cross Entropy - критерий вычисляет потерю перекрестной энтропии между входными логитами и таргетом. Используется для задачи классификации
++ L1 - критерий измеряет среднюю абсолютную ошибку (MAE) между каждым элементом во входном x и целевом y
+                """,
                 "items":tuple(TrainParamsNode.__params['Loss'].keys()), "user_data":TrainParamsNode.__params['Loss'], "width":TrainParamsNode.WIDTH
             },
             {
-                "label":"Optimizer", "type":'combo', "default_value":get_default('Optimizer'), 
+                "label":"Optimizer", "type":'combo', "default_value":get_default('Optimizer'), 'tooltip':"""
+### Оптимизатор
++ SGD - стохастический градиентный спуск - итерационный метод оптимизации целевой функции с подходящими свойствами гладкости (например, дифференцируемость или субдифференцируемость)
++ Adam - сочетает в себе идеи RMSProp и оптимизатора импульса
++ RMSprop - среднеквадратичное распространение корня - это экспоненциально затухающее среднее значение. RMSprop вносит свой вклад в экспоненциально затухающее среднее значение прошлых «квадратичных градиентов»
++ Adagrad (алгоритм адаптивного градиента) - регулирует скорость обучения для каждого параметра на основе его предыдущих градиентов
+                """,
                 "items":tuple(TrainParamsNode.__params['Optimizer'].keys()), "user_data":TrainParamsNode.__params['Optimizer'], "width":TrainParamsNode.WIDTH
             },
             {
-                "label":"Initialization", "type":'combo', "default_value":get_default('Initialization'), 
+                "label":"Initialization", "type":'combo', "default_value":get_default('Initialization'), 'tooltip':"""
+### Инициализация параметров
++ Normal - из нормального распределения (среднее=0, отклонение=0.01)
++ Xavier - из Ксавье распределения - подойдет для симметричных относительно нуля функций активации (например, Tanh), оставляет дисперсию весов одинаковой
+                """,
                 "items":tuple(TrainParamsNode.__params['Initialization'].keys()), "user_data":TrainParamsNode.__params['Initialization'], "width":TrainParamsNode.WIDTH
             },
-            {"label":"Learning Rate", "type":'float', "default_value":default_params.get('Learning Rate', 0.05), "width":TrainParamsNode.WIDTH},
-            {"label":"Max Epoches", "type":'int', "default_value":default_params.get('Max Epoches', 2), "width":TrainParamsNode.WIDTH},
-            {"label":"Save Weights", "type":"file", "callback":Pipeline.save_weight},
-            {"label":"Load Weights", "type":"file", "callback":Pipeline.load_weight},
-            {"label":"Continue Train", "type":"button", "callback":Pipeline.keep_train, "user_data":data_node},
-            {"label":"Terminate", "type":"button", "callback":Pipeline.terminate, "user_data":data_node},
-            {"label":"Train", "type":"button", "callback":Pipeline.flow, "user_data":data_node},
+            {"label":"Скорость обучения", "type":'float', "default_value":default_params.get('Скорость обучения', 0.05), "width":TrainParamsNode.WIDTH},
+            {"label":"Эпохи", "type":'int', "default_value":default_params.get('Эпохи', 2), "width":TrainParamsNode.WIDTH},
+            {"label":"Сохранить веса", "type":"file", "callback":Pipeline.save_weight},
+            {"label":"Загрузить веса", "type":"file", "callback":Pipeline.load_weight},
+            {"label":"Дообучить", "type":"button", "callback":Pipeline.keep_train, "user_data":data_node},
+            {"label":"Прервать", "type":"button", "callback":Pipeline.terminate, "user_data":data_node},
+            {"label":"Запустить обучение", "type":"button", "callback":Pipeline.flow, "user_data":data_node},
         ]
         self._add_params(train_params)
     
