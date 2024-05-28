@@ -11,6 +11,30 @@ astype = lambda x, *args, **kwargs: x.type(*args, **kwargs)
 argmax = lambda x, *args, **kwargs: x.argmax(*args, **kwargs)
 float32 = torch.float32
 
+class MultiBranch(nn.Module):
+
+    def __init__(self, multi_branch, **kwargs):
+        super(MultiBranch, self).__init__()
+        self.multi_branch = multi_branch
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+    @staticmethod
+    def sub_forward(branch, x):
+        if isinstance(branch, list):
+            res = MultiBranch.sub_forward(branch[0], x)
+            for module in branch[1:]:
+                res = MultiBranch.sub_forward(module, res)
+            return res
+        else:
+            return branch(x)
+
+    def forward(self, x):
+        branchs = []
+        for branch in self.multi_branch:
+            branchs.append(MultiBranch.sub_forward(branch, x))
+        return torch.cat(branchs, dim=self.dim)
 
 class Module(LightningModule):
     

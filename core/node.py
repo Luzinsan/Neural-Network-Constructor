@@ -4,6 +4,7 @@ from core.output_node_attr import OutputNodeAttribute
 from core.input_node_attr import InputNodeAttribute
 from core.param_node import ParamNode
 from app import lightning_data
+from app import lightning_module
 from config.settings import _completion_theme, Configs, BaseGUI, hover_handler
 from typing import Any, Union, Optional
 from copy import deepcopy
@@ -132,17 +133,21 @@ class Node(BaseGUI):
     def next(self, out_idx: int=0, node_idx: int=0) -> Union[Node, None]:
         input_attrs: list[InputNodeAttribute] = \
             self._output_attributes[out_idx]._children
-        return input_attrs[node_idx].get_node() if input_attrs else None
+        nodes = [input_attr.get_node() for input_attr in input_attrs] if input_attrs else None
+        if nodes and len(nodes) == 1:
+            nodes = nodes[0]
+        return nodes
         
 
-    def init_with_params(self, mode='simple') -> Any:
+    def init_with_params(self, mode='simple', params: Optional[dict]=None) -> Any:
         try: 
-            params = self.get_params()
+            params = params if params else self.get_params()
             print("\nСлой: ", self._data) if Node.debug else None
             print("Параметры слоя: ", params) if Node.debug else None
             match mode:
                 case 'simple': return self._data(**params)
                 case 'data': return lightning_data.DataModule(self._data, **params)
+                case 'multi_branch': return lightning_module.MultiBranch(self._data, **params)
         except: raise RuntimeError("Ошибка инициализации слоя")
         
         

@@ -52,7 +52,7 @@ params = {
     "stride":{"label":"stride", "type":'int', "default_value":1, 
             #   'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"
               },
-    "padding":{"label":"padding", "type":'int', "default_value":2, 
+    "padding":{"label":"padding", "type":'int', "default_value":0, 
             #    'tooltip':"Размер заполнения краёв входной матрицы"
                },
     "eps":          {"label":"eps", "type":'float', "default_value":0.00001},
@@ -63,7 +63,7 @@ params = {
 }
 
 default_params = {
-    'Loss':'Cross Entropy Loss',
+    'Loss':'Cross Entropy',
     'Optimizer':'SGD',
 }
 fromkeys = lambda d, keys: {x:d.get(x) for x in keys}
@@ -129,9 +129,9 @@ _Другие названия: полносвязный или плотный (
     "BatchNorm2d":      Module(layer.LayerNode.factory, nn.BatchNorm2d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "BatchNorm3d":      Module(layer.LayerNode.factory, nn.BatchNorm3d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
     "Flatten":          Module(layer.LayerNode.factory, nn.Flatten),
-    "Concatenate":      Module(layer.LayerNode.factory, torch.concatenate, (params['dim'], )),
-    "AvgPool2d":        Module(layer.LayerNode.factory, nn.AvgPool2d, (params['kernel_size'], params['stride'])),
-    "MaxPool2d":        Module(layer.LayerNode.factory, nn.MaxPool2d, (params['kernel_size'], params['stride'])),
+    "Concatenate":      Module(layer.LayerNode.factory, torch.cat, (params['dim'], )),
+    "AvgPool2d":        Module(layer.LayerNode.factory, nn.AvgPool2d, (params['kernel_size'], params['stride'], params['padding'])),
+    "MaxPool2d":        Module(layer.LayerNode.factory, nn.MaxPool2d, (params['kernel_size'], params['stride'], params['padding'])),
     "AdaptiveAvgPool2d":Module(layer.LayerNode.factory, nn.AdaptiveAvgPool2d, (params['output_size'], ), tooltip="Применяет двумерное адаптивное усреднение к входному сигналу, состоящему из нескольких входных плоскостей"),
     "Dropout":          Module(layer.LayerNode.factory, nn.Dropout, (params['p'], ), tooltip="__Метод регуляризации и предотвращения совместной адаптации нейронов__\nВо время обучения случайным образом обнуляет некоторые элементы входного тензора.\nЭлементы выбираются независимо во время каждого прямого прохода (feed-forward) из распределения Бернулли. "),
 

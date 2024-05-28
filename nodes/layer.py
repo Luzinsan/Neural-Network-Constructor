@@ -132,10 +132,10 @@ class ModuleNode(Node):
         all_sources = []
         all_params = []
         for idx, node in enumerate(sequential):
-            source: DragSource = node[0]
+            source: DragSource = deepcopy(node[0])
             defaults = None
             if len(node)>1:
-                defaults = node[1].copy()
+                defaults = deepcopy(node[1])
                 if source._generator.__qualname__ == 'ModuleNode.factory':
                     source._data = ModuleNode.replace_default_params(
                                             source._data, 

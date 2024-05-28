@@ -11,7 +11,7 @@ import torch
 from lightning import Trainer
 
 from core.node import Node
-from app.lightning_module import Module
+from app.lightning_module import Module, MultiBranch
 from nodes import dataset
 from nodes import train_params_node
 from core.utils import send_message, terminate_thread
@@ -28,7 +28,8 @@ class Pipeline:
         self.train_params = datanode.train_params.get_params()
         send_message(self.train_params, 'log', 'Тренировочные параметры') 
         send_message("Сбор слоёв", 'log') 
-        self.collect_layers(datanode)
+        self.dataset = datanode.init_with_params('data')
+        self.pipeline = Pipeline.collect_layers(datanode)
         send_message("Инициализация сети", 'log') 
         try:
             self.net = Module(sequential=nn.Sequential(*self.pipeline), optimizer=self.train_params['Optimizer'],
@@ -98,17 +99,66 @@ class Pipeline:
             send_message(err, 'error', "Файл параметров не найден")
             raise err
         
-    def collect_layers(self, node: Node):
-        self.dataset = node.init_with_params('data')
-        self.pipeline = []
+    @staticmethod
+    def collect_multi_branch(next_node):
+        multi_branch = []
+        for branch in next_node:
+            collected = Pipeline.collect_layers(branch, True)
+            multi_branch.append(collected[:-1])
+            node = collected[-1]
+        return Node('Multi-branch', multi_branch)\
+                        .init_with_params('multi_branch', node.get_params()), \
+                node
+
+    @staticmethod
+    def convert_to_data(module_node):
+        if isinstance(module_node, list):
+            new_data_list = []
+            for branch in module_node:
+                new_data_list.append(Pipeline.convert_to_data(branch))
+            return new_data_list
+        else: return module_node.init_with_params()
+
+
+    @staticmethod
+    def collect_layers(node: Node, reckon_in = False):
+        pipeline = [node.init_with_params()] if reckon_in else []
         while next_node := node.next():
-            # pdb.set_trace()
-            if isinstance(next_node._data, list):
-                for module_node in next_node._data:
-                    self.pipeline.append(module_node.init_with_params())
+            if isinstance(next_node, list): 
+                multi_batch, node = Pipeline.collect_multi_branch(next_node)
+                pipeline.append(multi_batch)
+                continue
+            elif isinstance(next_node._data, list):
+                module_index = 0
+                modules = next_node._data
+                
+                while module_index < len(modules):
+                    module_node = modules[module_index]
+                   
+                    if isinstance(module_node, list):
+                        if len(module_node) == 1:
+                            module_node = module_node[0] 
+                            for sub_node in module_node:
+                                pipeline.append(sub_node.init_with_params())
+                        else:
+                            module_node = Pipeline.convert_to_data(module_node)
+                            multi_batch = Node('Multi-branch', module_node)\
+                                        .init_with_params('multi_branch', 
+                                                        modules[module_index+1].get_params())
+
+                            pipeline.append(multi_batch)
+                            module_index += 1
+                    else:  
+                        pipeline.append(module_node.init_with_params())
+                    module_index += 1
+            elif next_node._data.__name__ == 'cat':
+                pipeline.append(next_node)
+                return pipeline
             else:
-                self.pipeline.append(next_node.init_with_params())
+                pipeline.append(next_node.init_with_params())
+            
             node = next_node
+        return pipeline
         
     def train(self):
         try: self.trainer = Trainer(max_epochs=self.train_params['Эпохи'], accelerator='gpu')

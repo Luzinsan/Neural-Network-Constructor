@@ -123,18 +123,18 @@ class App:
                                 ))
         archs['Inception'] = DragSource("Inception",
                                 (
-                                    (   (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':1}),  ),
+                                    (   (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':1}), (layers['ReLU'], ) ),
                                     (
-                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1}), 
-                                        (layers['LazyConv2d'], {'out_channels':128, 'kernel_size':1, 'padding':1}), 
+                                        (layers['LazyConv2d'], {'out_channels':96, 'kernel_size':1}), (layers['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':128, 'kernel_size':3, 'padding':1}), (layers['ReLU'], )
                                     ),    
                                     (
-                                        (layers['LazyConv2d'], {'out_channels':16, 'kernel_size':1}),
-                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':1, 'padding':2})
+                                        (layers['LazyConv2d'], {'out_channels':16, 'kernel_size':1}),(layers['ReLU'], ),
+                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':5, 'padding':2}), (layers['ReLU'], )
                                     ),
                                     (
                                         (layers['MaxPool2d'], {'kernel_size':3, 'stride':1, "padding":1}),
-                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':1})
+                                        (layers['LazyConv2d'], {'out_channels':32, 'kernel_size':1}), (layers['ReLU'], )
                                     )
                                 ))
         archs['GoogLeNet'] = DragSource("GoogLeNet",
@@ -144,15 +144,15 @@ class App:
                                     (layers['LazyConv2d'], {'out_channels':64, 'kernel_size':1}), (layers['ReLU'], ),
                                     (layers['LazyConv2d'], {'out_channels':192, 'kernel_size':3, 'padding':1}), (layers['ReLU'], ),
                                     (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
-                                    (archs['Inception'], [{'out_channels': [64]}, 
-                                                          {'out_channels': [96, 128]}, 
-                                                          {'out_channels': [16, 32]}, 
-                                                          {'out_channels': [None, 32]}]),
+                                    (archs['Inception'], [{'out_channels': [64, None]}, 
+                                                          {'out_channels': [96, None, 128, None]}, 
+                                                          {'out_channels': [16, None, 32, None]}, 
+                                                          {'out_channels': [None, 32, None]}]),
                                     (layers['Concatenate'], ),
-                                    (archs['Inception'], [{'out_channels': [128]}, 
-                                                          {'out_channels': [128, 192]}, 
-                                                          {'out_channels': [32, 96]}, 
-                                                          {'out_channels': [None, 64]}]),
+                                    (archs['Inception'], [{'out_channels': [128, None]}, 
+                                                          {'out_channels': [128, None, 192, None]}, 
+                                                          {'out_channels': [32, None, 96, None]}, 
+                                                          {'out_channels': [None, 64, None]}]),
                                     (layers['Concatenate'], ),
                                     (layers['MaxPool2d'], {'kernel_size':3, 'stride':2, 'padding':1}),
                                 ))
