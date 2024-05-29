@@ -81,7 +81,7 @@ class NodeEditor(BaseGUI):
             [attr.convert_input_attrs(map_input_uuids)
                 for attr 
                 in node_instance._output_attributes]
-        LinkNode.link_nodes(node_instances, self.uuid)
+        LinkNode.link_by_children(node_instances[0], self.uuid)
         
         
     def delete_selected_nodes(self) -> None:

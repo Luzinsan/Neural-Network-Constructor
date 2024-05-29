@@ -52,5 +52,12 @@ class LinkNode(BaseGUI):
         for inx in range(len(nodes) - 1):
             LinkNode._link_nodes(nodes[inx], nodes[inx + 1], editor_uuid)
     
-   
+    # BUG: input_attr почему-то иногда isinstance(input_attr, int)
+    # BUG: multibranch модели линкуются только по первой ветке
+    @staticmethod
+    def link_by_children(node: Node, editor_uuid):
+        output_attr = node._output_attributes[0]
+        for input_attr in output_attr._children:
+            LinkNode._link_callback(editor_uuid, (output_attr.uuid, input_attr.uuid))
+            LinkNode.link_by_children(input_attr.get_node(), editor_uuid)
     
