@@ -24,6 +24,8 @@ class LayerNode(Node):
                  params:Optional[tuple[dict]]=None, 
                  default_params: Optional[dict[str,str]]=None, 
                  **node_params):
+        if not default_params or not default_params.get('part_of_module', None):
+            node_params['pos'] = NodeEditor.mouse_pos
         super().__init__(label, data, **node_params)
         self._add_input_attribute(InputNodeAttribute("data"))
         self._add_output_attribute(OutputNodeAttribute("weighted data"))
@@ -47,6 +49,11 @@ class ModuleNode(Node):
                  params: Optional[list[dict[str, Any]]]=None, 
                  default_params: Optional[dict[str,str]]=None, 
                  **node_params):
+        if node_params:
+            node_params['pos'] = node_params.get('pos', [NodeEditor.mouse_pos[0], NodeEditor.mouse_pos[1]])
+            if (x := node_params['pos'].get('x', None)) and (y := node_params['pos'].get('y', None)):
+                node_params['pos'] = [x,y]
+        else: node_params = {'pos':[NodeEditor.mouse_pos[0], NodeEditor.mouse_pos[1]]}
         super().__init__(label, None, **node_params)
         self._add_input_attribute(InputNodeAttribute("data"))
         self._add_output_attribute(OutputNodeAttribute("weighted data"))
@@ -57,8 +64,8 @@ class ModuleNode(Node):
         
         self._add_params(params)
         self.sequential = sequential
-       
-        self.pos: dict[str, int] = node_params.get('pos', {"x":0, "y":0})
+        self.pos: dict[str, int] = {"x":node_params['pos'][0], "y":node_params['pos'][1]}
+
 
     @staticmethod
     def _replace(module, new_defaults, idx):
@@ -146,7 +153,7 @@ class ModuleNode(Node):
                         sources, self.pos, source_params = \
                             ModuleNode(source._label, 
                                        source._data,
-                                       pos={'x':0, "y":self.pos['y'] + 150})\
+                                       pos={'x':NodeEditor.mouse_pos[0], "y":self.pos['y'] + 150})\
                                            .submit_sequential(submodule)
                     all_sources.append(sources)
                     all_params.append(source_params)
@@ -156,9 +163,8 @@ class ModuleNode(Node):
                                         source._params, 
                                         defaults, 
                                         modal))
-            self.pos['x'] += 300
             params = {"pos":(self.pos['x'], self.pos['y'])}
-
+            self.pos['x'] += 200
             all_sources.append(
                 deepcopy((source._label, 
                           source._generator, 
@@ -181,13 +187,12 @@ class ModuleNode(Node):
         for idx, branch in enumerate(self.sequential, 1):
             if is_branch:
                 modal = dpg.add_collapsing_header(label=f'Ветка #{idx}', default_open=False)
-                self.pos['x'] = 0
+                self.pos['x'] = NodeEditor.mouse_pos[0]
                 self.pos['y'] += 200
                 
             sources, _, source_params = self.submit_module(branch, modal)
             all_sources.append(sources)
             all_params.append(source_params)
-            self.pos['x'] += self.pos['x'] / 2
         return all_sources, self.pos, all_params
     
     @staticmethod
