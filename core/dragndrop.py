@@ -28,9 +28,12 @@ class DragSourceContainer(BaseGUI):
             with dpg.menu_bar():
                 dpg.add_menu(label=self._label, 
                              enabled=False)
-
-            for child in self._children:
-                child._submit(child_parent)
+            filter_uuid = dpg.generate_uuid()
+            
+            dpg.add_input_text(hint="Поиск", callback=lambda s, a: dpg.set_value(filter_uuid, a), width=-1)
+            with dpg.filter_set(tag=filter_uuid):
+                for child in self._children:
+                    child._submit(filter_uuid)
 
 
 
@@ -57,7 +60,8 @@ class DragSource():
         button = dpg.add_button(label=self._label, 
                         parent=parent, 
                         width=-1,
-                        user_data=self)
+                        user_data=self,
+                        filter_key=self._label)
        
         dpg.bind_item_handler_registry(button, hover_handler)
         dpg.bind_item_theme(button, _source_theme)
