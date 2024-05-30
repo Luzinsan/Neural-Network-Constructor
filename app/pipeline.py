@@ -36,7 +36,7 @@ class Pipeline:
                               lr=self.train_params['Скорость обучения'], loss_func=self.train_params['Функция потерь'])
             self.net.apply_init(self.dataset, self.train_params['Initialization'])
             send_message(self.net, 'code', 'Инициализированная сеть') 
-            self.net.layer_summary((1,1,*self.dataset.shape)) if Pipeline.debug else None
+            self.net.layer_summary((self.dataset.batch_size,1,*self.dataset.shape)) if Pipeline.debug else None
         except (BaseException, RuntimeError, TypeError) as err: 
             send_message(err, 'error', "Возникла ошибка во время инициализации сети")
             raise err

@@ -41,7 +41,6 @@ class App:
             for layer
             in ["LazyLinear","LazyBatchNorm1d","LazyBatchNorm2d","LazyBatchNorm3d",
                 "LazyConv1d","LazyConv2d","LazyConv3d",
-                "BatchNorm1d","BatchNorm2d","BatchNorm3d",
                 "Flatten","Concatenate","AvgPool2d","MaxPool2d","AdaptiveAvgPool2d",
                 "Dropout","ReLU","Sigmoid","Tanh",]
          }
@@ -199,6 +198,17 @@ class App:
                                     (layers['LazyLinear'], {'out_features':10}), 
                                    
                                 ))
+        archs['BN LeNet'] = DragSource('BN LeNet',
+                                (
+                                    (layers['LazyConv2d'], {'out_channels':6,"kernel_size":5}),(layers['LazyBatchNorm2d'], ),
+                                    (layers['Sigmoid'],), (layers['AvgPool2d'], {'kernel_size': 2, 'stride':2}),
+                                    (layers['LazyConv2d'], {'out_channels':16,"kernel_size":5}),(layers['LazyBatchNorm2d'], ),
+                                    (layers['Sigmoid'],), (layers['AvgPool2d'], {'kernel_size': 2, 'stride':2}),
+                                    (layers['Flatten'], ), (layers['LazyLinear'], {'out_features': 120}),(layers['LazyBatchNorm1d'], ), 
+                                    (layers['Sigmoid'], ), (layers['LazyLinear'], {'out_features': 84}),(layers['LazyBatchNorm1d'], ),
+                                    (layers['Sigmoid'], ), (layers['LazyLinear'], {'out_features': 10})
+                                ))
+        
         self.archs_container = DragSourceContainer("Модули", 150, 0)
         self.archs_container.add_drag_source(archs.values())
         #endregion

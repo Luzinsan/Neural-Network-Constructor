@@ -55,9 +55,9 @@ params = {
     "padding":{"label":"padding", "type":'int', "default_value":0, 
             #    'tooltip':"Размер заполнения краёв входной матрицы"
                },
-    "eps":          {"label":"eps", "type":'float', "default_value":0.00001},
-    "momentum":{"label":"momentum", "type":'float', "default_value":0.01},
-    "affine":{"label":"affine", "type":'bool'},
+    "eps":          {"label":"eps", "type":'float', "default_value":1e-5},
+    "momentum":{"label":"momentum", "type":'float', "default_value":0.1},
+    "affine":{"label":"affine", "type":'bool', "default_value": True},
     "p":{"label":"p", "type":'float', "default_value":0.5, 'tooltip':"Вероятность обнуления элемента"},
     "dim":{"label":"dim", "type":'int', "default_value":1, 'tooltip':"Рассматриваемое измерение"},
 }
@@ -119,15 +119,12 @@ ___
 _Другие названия: полносвязный или плотный (Dense) слой_
 + это линейное преобразование над входящими данными (его обучаемые параметры - это матрица _W_ и вектор _b_). Такой слой преобразует _d_-размерные векторы в _k_-размерные
                                """),
-    "LazyBatchNorm1d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm1d, (params['eps'], params['momentum'], params['affine'])),
-    "LazyBatchNorm2d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm2d, (params['eps'], params['momentum'], params['affine'])),
-    "LazyBatchNorm3d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm3d, (params['eps'], params['momentum'], params['affine'])),
     "LazyConv1d":       Module(layer.LayerNode.factory, nn.LazyConv1d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет одномерную свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
     "LazyConv2d":       Module(layer.LayerNode.factory, nn.LazyConv2d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет 2D-свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
     "LazyConv3d":       Module(layer.LayerNode.factory, nn.LazyConv3d, (params['out_channels'], params['kernel_size'], params['stride'], params['padding']), tooltip="Применяет 3D-свертку к входному сигналу, состоящему из нескольких входных плоскостей"),
-    "BatchNorm1d":      Module(layer.LayerNode.factory, nn.BatchNorm1d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
-    "BatchNorm2d":      Module(layer.LayerNode.factory, nn.BatchNorm2d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
-    "BatchNorm3d":      Module(layer.LayerNode.factory, nn.BatchNorm3d, (params['num_features'], params['eps'], params['momentum'], params['affine'])),
+    "LazyBatchNorm1d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm1d, (params['eps'], params['momentum'], params['affine']), tooltip='_Рекомендуемый размер пакета (в гиперпараметрах обучения) = 50-100_'),
+    "LazyBatchNorm2d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm2d, (params['eps'], params['momentum'], params['affine'])),
+    "LazyBatchNorm3d":  Module(layer.LayerNode.factory, nn.LazyBatchNorm3d, (params['eps'], params['momentum'], params['affine'])),
     "Flatten":          Module(layer.LayerNode.factory, nn.Flatten),
     "Concatenate":      Module(layer.LayerNode.factory, torch.cat, (params['dim'], )),
     "AvgPool2d":        Module(layer.LayerNode.factory, nn.AvgPool2d, (params['kernel_size'], params['stride'], params['padding'])),
@@ -229,8 +226,32 @@ ___
 + Содержит модули Conv-MLP
 + MLP позволяют сильно повысить эффективность отдельных свёрточных слоёв посредством их комбинирования в более сложные группы.
 + Совершенно не использует полносвязные слои, что кратно уменьшает кол-во параметров, однако потенциально увеличивает время обучения
-                               """),
-     "Inception":          Module(layer.ModuleNode.factory),
-     "GoogLeNet":          Module(layer.ModuleNode.factory),
+                                """),
+     "Inception":          Module(layer.ModuleNode.factory, image='./static/images/inception.png', popup='_Блок сети GoogLeNet_'),
+                                 
+     "GoogLeNet":          Module(layer.ModuleNode.factory, image='./static/images/googlenet.png',
+                                details="""
+### Задания
+GoogLeNet оказался настолько успешным, что прошел ряд итераций, постепенно улучшая скорость и точность. Попробуйте реализовать и запустить некоторые из них. Они включают в себя следующее:
++ Добавьте слой пакетной нормализации [Иоффе и Сегеди, 2015](https://arxiv.org/pdf/1502.03167)
++ Внесите изменения в блок Inception (ширина, выбор и порядок сверток), как описано у [Szegedy et al. (2016)](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Szegedy_Rethinking_the_Inception_CVPR_2016_paper.pdf)
++ Используйте сглаживание меток для регуляризации модели, как описано в [Szegedy et al. (2016)](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Szegedy_Rethinking_the_Inception_CVPR_2016_paper.pdf)
++ Внесите дальнейшие корректировки в блок Inception, добавив остаточное (residual) соединение [Szegedy et al., 2017](http://www.cs.cmu.edu/~jeanoh/16-785/papers/szegedy-aaai2017-inception-v4.pdf)
+                                """,
+                                  popup="""
+### Многофилиальная сеть [GoogLeNet](https://arxiv.org/pdf/1409.4842)
+___
+Сочетает в себе сильные стороны NiN, вдохновлен LeNet и AlexNet
++ Довольно время- и ресурсозатратна
++ Здесь представлен упрощенный вариант. Оригинал включает ряд приёмов стабилизации обучения. В них больше нет необходимости из-за улучшенных алгоритмов обучения.
++ Базовый сверточный блок - Inception. Настраеваемые гиперпараметры - кол-во выходных каналов (output channels)
++ GoogLeNet использует 9 Inception блоков, сгруппированных на 3 группы (по 2, 5, 2 блока) 
++ Одна из первых сверточных сетей, в которой различаются основная часть (приём данных), тело (обработка данных) и голова (прогнозирование)
+  - Основу задают 2-3 свертки, которые работают с изображением и извлекают низкоуровневые признаки
+  - Телом является набор сверточных блоков
+  - В голове сопоставляются полученные признаки с целевым признаком по задаче (классификации, сегментации, детекции или отслеживания)
+                                """),
+    "BN LeNet":         Module(layer.ModuleNode)
+
 })
 
