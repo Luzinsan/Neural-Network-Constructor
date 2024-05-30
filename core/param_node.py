@@ -5,6 +5,7 @@ from torchvision.transforms import v2 # type: ignore
 from config.settings import Configs, BaseGUI
 import external.DearPyGui_Markdown as dpg_markdown
 from typing import Optional, Union
+import pdb
 
 
 class ParamNode(BaseGUI):
@@ -49,7 +50,7 @@ class ParamNode(BaseGUI):
             case 'int':
                 dpg.add_input_int(**self._params, label=self._label, min_value=1, min_clamped=True, step=2, tag=self.uuid, parent=parent)
             case 'float':
-                dpg.add_input_float(**self._params, label=self._label, step=0.00001, min_value=0.000001, min_clamped=True, tag=self.uuid, parent=parent)
+                dpg.add_input_float(**self._params, format='%.5f', label=self._label, step=0.00001, min_value=0.000001, min_clamped=True, tag=self.uuid, parent=parent)
             case 'text'|'text/tuple':
                 dpg.add_input_text(**self._params, label=self._label, tag=self.uuid, parent=parent)
             case 'combo':
@@ -62,13 +63,18 @@ class ParamNode(BaseGUI):
                             self.checkboxes_uuids.append(ParamNode(**item)\
                                 ._submit_in_container(self.uuid, 'bool'))     
             case 'blank':
-                dpg.add_text(**self._params, default_value=self._label, tag=self.uuid, parent=parent)
+                self._params['default_value'] = self._label
+                dpg.add_text(**self._params, tag=self.uuid, parent=parent)
             case 'bool':
-                if self._type == 'bool': self._type='blank'
-                with dpg.group(horizontal=True) as group:     
-                    param = ParamNode(label=self._label, type=self._type, **self._params)
+               
+                with dpg.group(horizontal=True) as group:  
+                    param = ParamNode(label=self._label, type='blank'
+                                                            if self._type == 'bool' 
+                                                            else self._type, 
+                                     **self._params)
                     param._submit_in_container(group)
-                    return dpg.add_checkbox(default_value=False, 
+                    default_value = self._params.get("default_value", False)
+                    return dpg.add_checkbox(default_value=default_value if isinstance(default_value, bool) else False, 
                                             before=param.uuid,
                                             user_data=param,
                                             tag=self.uuid)
@@ -130,10 +136,16 @@ class ParamNode(BaseGUI):
                                     else value}
             case 'blank':
                 return {self._label: dpg.get_item_user_data(self.uuid)()} 
-            case 'bool': # TODO: fix with with_user_data
-                return {self._label: dpg.get_item_user_data(self.uuid).get_value()\
-                        if dpg.get_value(self.uuid) is True \
-                        else None}
+            case 'bool':
+                pdb.set_trace()
+                if dpg.does_item_exist(self.uuid):
+                    obj = dpg.get_item_user_data(self.uuid)
+                else: return {self._label: self._params['default_value']} 
+                if (not obj) or (obj._type == 'blank' and not dpg.get_item_user_data(obj.uuid)): 
+                    return {self._label: dpg.get_value(self.uuid)}
+                return {self._label: obj.get_value()\
+                                    if dpg.get_value(self.uuid) is True \
+                                    else None}
             case 'file'|'path'|'button':
                 return None    
             case _:
