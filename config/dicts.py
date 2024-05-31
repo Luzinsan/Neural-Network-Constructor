@@ -42,18 +42,18 @@ params = {
     "default_train":{'Loss':'L1 Loss','Optimizer':'SGD'},
     "out_features": {"label":"out_features", "type":'int', "default_value":1, "tooltip":"Количество признаков на выходе линейной трансформации.\nКоличество признаков на входе определяется автоматически"},
     "out_channels": {"label":"out_channels", "type":'int', "default_value":6, 
-                    #  "tooltip":"Количество выходных каналов/признаковых карт, которые являются репрезентациями для последующих слоёв (рецептивное поле)"
+                     "tooltip":"Количество выходных каналов/признаковых карт, которые являются репрезентациями для последующих слоёв (рецептивное поле)"
                      },
     "num_features": {"label":"num_features", "type":'int', "default_value":6},
     "output_size":{"label":"output_size", "type":'text/tuple', "default_value":'[1, 2]', 'tooltip':"Целевой выходной размер изображения формы HxW. Может быть списком [H, W] или одним H (для квадратного изображения HxH).\nH и W могут быть либо int , либо None. None означает, что размер будет таким же, как и у входных данных."},
     "kernel_size":{"label":"kernel_size", "type":'int', "default_value":5, 
-                #    'tooltip':"Размер тензорного ядра"
+                   'tooltip':"Размер тензорного ядра"
                    },
     "stride":{"label":"stride", "type":'int', "default_value":1, 
-            #   'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"
+              'tooltip': "Шаг прохождения тензорного ядра во время свёртки (взаимной корреляции)"
               },
     "padding":{"label":"padding", "type":'int', "default_value":0, 
-            #    'tooltip':"Размер заполнения краёв входной матрицы"
+               'tooltip':"Размер заполнения краёв входной матрицы"
                },
     "eps":          {"label":"eps", "type":'float', "default_value":1e-5},
     "momentum":{"label":"momentum", "type":'float', "default_value":0.1},

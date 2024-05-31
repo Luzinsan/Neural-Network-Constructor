@@ -137,7 +137,6 @@ class ParamNode(BaseGUI):
             case 'blank':
                 return {self._label: dpg.get_item_user_data(self.uuid)()} 
             case 'bool':
-                pdb.set_trace()
                 if dpg.does_item_exist(self.uuid):
                     obj = dpg.get_item_user_data(self.uuid)
                 else: return {self._label: self._params['default_value']} 

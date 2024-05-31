@@ -107,8 +107,8 @@ class Module(LightningModule):
     #                        titles=[f"{pred}\n{truth}" for pred, truth in zip(Y_hat, ground_truth)])
     
     def layer_summary(self, X_shape):
-        print("Individual input shape:\t", *X_shape)
+        send_message(f"{'Размер входного тензора':25}:\t{X_shape}", 'log', "") 
         X = torch.randn(*X_shape)
         for layer in self.net:
             X = layer(X)
-            print(layer.__class__.__name__, 'output shape:\t', X.shape)
+            send_message(f"{layer.__class__.__name__:<45}:\t{X_shape}", 'log', "")

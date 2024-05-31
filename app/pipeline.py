@@ -40,7 +40,6 @@ class Pipeline:
         except (BaseException, RuntimeError, TypeError) as err: 
             send_message(err, 'error', "Возникла ошибка во время инициализации сети")
             raise err
-        
         self.task: clearml.Task = clearml.Task.init(
                     project_name=self.train_params["Название проекта"],
                     task_name=self.train_params["Название задачи"],
@@ -59,7 +58,11 @@ class Pipeline:
     @staticmethod
     def keep_train(sender, app_data, datanode: dataset.DataNode):
         if hasattr(datanode.train_params, "pipeline"):
-            try: datanode.train_params.pipeline.train()
+            try: 
+                self = datanode.train_params.pipeline
+                self.train_params = datanode.train_params.get_params()
+                self.net.lr = self.train_params['Скорость обучения']
+                self.train()
             except BaseException as err:
                 send_message(err, 'error', "Возникла ошибка во время дообучения")
                 raise err
@@ -73,6 +76,7 @@ class Pipeline:
                 self = datanode.train_params.pipeline
                 if hasattr(self, "thread"):
                     terminate_thread(self.thread)
+                    self.task.close()
         except (BaseException, ValueError) as warn:
             send_message(warn, 'warning')
             raise warn
@@ -161,13 +165,14 @@ class Pipeline:
         return pipeline
         
     def train(self):
-        try: self.trainer = Trainer(max_epochs=self.train_params['Эпохи'], accelerator='gpu')
+        try: self.trainer = Trainer(max_epochs=self.train_params['Эпохи'], accelerator='auto', # 'gpu' if torch.cuda.is_available() else 'cpu' 
+                                    log_every_n_steps=len(self.dataset.train) / self.dataset.batch_size) 
         except (BaseException, RuntimeError) as err: 
             send_message(err, 'error', "Ошибка инициализации тренировочного класса")
             raise err
         try:
             self.thread = threading.Thread(target=self.trainer.fit, args=(),name='train',
-                                           kwargs=dict(model=self.net, datamodule=self.dataset))
+                                           kwargs=dict(model=self.net, datamodule=self.dataset, task=self.task))
             self.thread.start() 
         except (BaseException, RuntimeError) as err: 
             terminate_thread(self.thread)

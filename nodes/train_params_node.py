@@ -53,8 +53,8 @@ class TrainParamsNode(Node):
             return default_params.get(value, list(TrainParamsNode.__params[value].keys())[0])
         
         train_params: list[dict[str, object]] = [
-            {"label":"Название проекта", "type":'text', "default_value":default_params.get('Название проекта','DLC'), "width":TrainParamsNode.WIDTH},
-            {"label":"Название задачи", "type":'text', "default_value":default_params.get('Название задачи', data_node._label), "width":TrainParamsNode.WIDTH},
+            {"label":"Название проекта", "type":'text', "default_value":default_params.get('Название задачи', data_node._label), "width":TrainParamsNode.WIDTH},
+            {"label":"Название задачи", "type":'text', "default_value":default_params.get('Название проекта','DLC'), "width":TrainParamsNode.WIDTH},
             {
                 "label":"Функция потерь", "type":'combo', "default_value":get_default('Loss'), 'tooltip':"""
 ### Функция потерь
