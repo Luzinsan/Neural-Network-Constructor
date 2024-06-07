@@ -24,6 +24,7 @@ class App:
     
         
         #region datasets
+        WIDTH = 155
         datasets = {
             data: DragSource(data)
             for data
@@ -43,11 +44,9 @@ class App:
                 "ImageNet",
                 "Dataset from File",]
         }
-        self.dataset_container = DragSourceContainer("Датасеты", 150, -300)
+        self.dataset_container = DragSourceContainer("Датасеты", WIDTH, -300)
         self.dataset_container.add_drag_source(datasets.values())
         #endregion
-        
-        
         
         #region layers
         layers = {
@@ -60,7 +59,7 @@ class App:
                 "AvgPool2d","MaxPool2d","AdaptiveAvgPool2d",
                 "Dropout"]
          }
-        self.layer_container = DragSourceContainer("Слои|ф.активации", 150, -300)
+        self.layer_container = DragSourceContainer("Слои", WIDTH, -300)
         self.layer_container.add_drag_source(layers.values())
         #endregion
         
@@ -70,7 +69,7 @@ class App:
             for activation
             in ["ReLU","Sigmoid","Tanh",]
          }
-        self.activation_container = DragSourceContainer("Функции активаций", 150, 0)
+        self.activation_container = DragSourceContainer("Функции активаций", WIDTH, 0)
         self.activation_container.add_drag_source(activations.values())
         #endregion
 
@@ -235,7 +234,7 @@ class App:
                                     (activations['Sigmoid'], ), (layers['LazyLinear'], {'out_features': 10})
                                 ))
         
-        self.archs_container = DragSourceContainer("Модули", 150, 0)
+        self.archs_container = DragSourceContainer("Модули", WIDTH, 0)
         self.archs_container.add_drag_source(archs.values())
         #endregion
 

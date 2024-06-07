@@ -172,7 +172,7 @@ class Pipeline:
             raise err
         try:
             self.thread = threading.Thread(target=self.trainer.fit, args=(),name='train',
-                                           kwargs=dict(model=self.net, datamodule=self.dataset, task=self.task))
+                                           kwargs=dict(model=self.net, datamodule=self.dataset))
             self.thread.start() 
         except (BaseException, RuntimeError) as err: 
             terminate_thread(self.thread)

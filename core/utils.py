@@ -55,9 +55,9 @@ def send_message(message, type_message: str = 'error', brief:Optional[str]=None,
     message = f"{brief}.\nПодробнее: {message}" if brief else message
      
     map_style_message = {
-        'error': '<font color="(255,0,0)">{}</font>', 
-        'warning':'<font color="(255,255,0)">{}</font>',
-        'log':'<font color="(0,255,0)">{}</font>',
+        'error': '<font color="(191,47,1)">{}</font>', 
+        'warning':'<font color="(191,165,1)">{}</font>',
+        'log':'<font color="(22,144,0)">{}</font>',
         'code':'```\n{}\n```',
     }
     style = map_style_message.get(type_message)
@@ -85,9 +85,9 @@ def set_path(sender, app_data):
 
 with dpg.file_dialog(directory_selector=False, show=False, callback=set_path, tag="file_dialog",
                      width=700, height=400, modal=True):
-    dpg.add_file_extension(".xlsx", color=(0, 255, 0, 255), custom_text="[Calc]")
-    dpg.add_file_extension(".csv", color=(0, 255, 0, 255), custom_text="[CSV]")
-    dpg.add_file_extension(".params", color=(0, 255, 0, 255), custom_text="[Params]")
+    dpg.add_file_extension(".xlsx", color=(3, 138, 48, 255), custom_text="[Calc]")
+    dpg.add_file_extension(".csv", color=(3, 138, 48, 255), custom_text="[CSV]")
+    dpg.add_file_extension(".params", color=(3, 138, 48, 255), custom_text="[Params]")
 
 
 with dpg.file_dialog(
@@ -98,5 +98,4 @@ with dpg.file_dialog(
         default_filename=datetime.datetime.now().strftime('%Y_%m_%d'),
         tag='json_file',
         ):
-    dpg.add_file_extension('.json')
-    dpg.add_file_extension('', color=(150, 255, 150, 255))
+    dpg.add_file_extension('.json', color=(126, 138, 3, 255))

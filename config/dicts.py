@@ -3,7 +3,6 @@ from torch import nn
 from collections import namedtuple, defaultdict
 from typing import DefaultDict, NamedTuple
 from nodes import layer, dataset
-from app.trash import CustomDataset
 
 import torch
 import torchvision.datasets as ds # type: ignore
@@ -108,7 +107,7 @@ _На изображении каждый класс представлен в �
                              (params['img_transforms'], params['batch_size']), fromkeys(default_params, ['Loss', 'Optimizer'])),
     "SUN397":       Module(dataset.DataNode.factory, ds.SUN397, 
                            (params['img_transforms'], params['batch_size']), fromkeys(default_params, ['Loss', 'Optimizer'])),
-    "Dataset from File":       Module(dataset.DataNode.factory, CustomDataset, 
+    "Dataset from File":       Module(dataset.DataNode.factory, dataset.CustomDataset, 
                                       (params['val_size'], params['button_load']), fromkeys(default_params, ['Loss', 'Optimizer'])),
 
 ######################################################################~~~ LINEARS ~~~#######################################################################
