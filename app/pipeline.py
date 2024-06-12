@@ -40,11 +40,14 @@ class Pipeline:
         except (BaseException, RuntimeError, TypeError) as err: 
             send_message(err, 'error', "Возникла ошибка во время инициализации сети")
             raise err
-        self.task: clearml.Task = clearml.Task.init(
-                    project_name=self.train_params["Название проекта"],
-                    task_name=self.train_params["Название задачи"],
-                    continue_last_task=True)
+        params = dict(project_name=self.train_params["Название проекта"],
+                    task_name=self.train_params["Название задачи"])
+        
+        is_exist = clearml.Task.get_task(**params)
+        if is_exist: is_exist.delete()
+        self.task = clearml.Task.init(**params)
         self.task.connect(self.train_params)
+        
         send_message(f'[ClearML]({self.task.get_output_log_web_page()})', 
                      'log', 'Запуск ClearML') 
 
